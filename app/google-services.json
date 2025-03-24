@@ -1,0 +1,49 @@
+{
+  "project_info": {
+    "project_number": "505039591645",
+    "firebase_url": "https://togetherwecan-ec70b-default-rtdb.europe-west1.firebasedatabase.app",
+    "project_id": "togetherwecan-ec70b",
+    "storage_bucket": "togetherwecan-ec70b.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:505039591645:android:a0e0945cbeef2c2d53a334",
+        "android_client_info": {
+          "package_name": "com.example.togetherwecan"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAr7WP5EHKt65kBj3oHKLdqbt_RAliO34Y"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:505039591645:android:3b687261703becb253a334",
+        "android_client_info": {
+          "package_name": "com.togetherwecan"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAr7WP5EHKt65kBj3oHKLdqbt_RAliO34Y"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
