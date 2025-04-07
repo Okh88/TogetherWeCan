@@ -1,14 +1,32 @@
 package com.example.togetherwecan
-import android.widget.Toast
+
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Email
 import androidx.compose.material.icons.filled.Lock
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
@@ -25,6 +43,7 @@ fun LoginScreen(navController: NavController) {
     val auth = FirebaseAuth.getInstance()
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
+    var errorMessage by remember { mutableStateOf("") }
 
     Column(
         modifier = Modifier
@@ -38,65 +57,110 @@ fun LoginScreen(navController: NavController) {
             painter = painterResource(id = R.drawable.togetherwecanlogo),
             contentDescription = "Logo User",
             modifier = Modifier
-                .size(80.dp)
-                .padding(bottom = 16.dp)
+                .size(90.dp)
+                .padding(bottom = 24.dp)
         )
 
-        Text("Log In to Your Account", fontSize = 22.sp, style = MaterialTheme.typography.headlineMedium)
-        Spacer(modifier = Modifier.height(20.dp))
+        Text(
+            "Log In to Your Account",
+            fontSize = 24.sp,
+            style = MaterialTheme.typography.headlineSmall,
+            color = Color(0xFF446E84)
+        )
 
+        Spacer(modifier = Modifier.height(24.dp))
+
+        // Email input field
         OutlinedTextField(
             value = email,
             onValueChange = { email = it },
             label = { Text("Username or Email") },
             leadingIcon = { Icon(Icons.Filled.Email, contentDescription = "Email Icon") },
-            modifier = Modifier.fillMaxWidth()
+            shape = RoundedCornerShape(30.dp),
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(vertical = 6.dp),
+            colors = OutlinedTextFieldDefaults.colors(
+                focusedBorderColor = Color(0xFF4796B6),
+                unfocusedBorderColor = Color.LightGray,
+                cursorColor = Color(0xFF446E84)
+            )
         )
 
-        Spacer(modifier = Modifier.height(10.dp))
-
+        // Password input field
         OutlinedTextField(
             value = password,
             onValueChange = { password = it },
             label = { Text("Password") },
             leadingIcon = { Icon(Icons.Filled.Lock, contentDescription = "Password Icon") },
             visualTransformation = PasswordVisualTransformation(),
-            modifier = Modifier.fillMaxWidth()
+            shape = RoundedCornerShape(30.dp),
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(vertical = 6.dp),
+            colors = OutlinedTextFieldDefaults.colors(
+                focusedBorderColor = Color(0xFF4796B6),
+                unfocusedBorderColor = Color.LightGray,
+                cursorColor = Color(0xFF446E84)
+            )
         )
-        Spacer(modifier = Modifier.height(20.dp))
 
+        // Show error message if there is one
+        if (errorMessage.isNotEmpty()) {
+            Text(
+                text = errorMessage,
+                color = Color.Red,
+                fontSize = 14.sp,
+                modifier = Modifier.padding(top = 8.dp)
+            )
+        }
+
+        Spacer(modifier = Modifier.height(30.dp))
+
+        // Login button
         Button(
             onClick = {
-                auth.signInWithEmailAndPassword(email, password)
-                    .addOnCompleteListener { task ->
-                        if (task.isSuccessful) {
-                            navController.navigate("home") {
-                                launchSingleTop = true
+                if (email.isEmpty() || password.isEmpty()) {
+                    // Display error message if fields are empty
+                    errorMessage = "Please fill in all fields"
+                } else {
+                    auth.signInWithEmailAndPassword(email, password)
+                        .addOnCompleteListener { task ->
+                            if (task.isSuccessful) {
+                                navController.navigate("home") {
+                                    launchSingleTop = true
+                                }
+                            } else {
+                                // Display error if login fails
+                                errorMessage = "Invalid email or password"
                             }
-                        } else {
-                            Toast.makeText(navController.context, "Log In Error", Toast.LENGTH_SHORT).show()
                         }
-                    }
+                }
             },
             modifier = Modifier
-                .fillMaxWidth(0.6f)
+                .fillMaxWidth(0.65f)
                 .height(50.dp)
                 .background(
                     brush = Brush.horizontalGradient(
-                        colors = listOf(Color(0xFF97D0E8),Color(0xFF4796B6), Color(0xFF446E84))
+                        colors = listOf(Color(0xFF97D0E8), Color(0xFF4796B6), Color(0xFF446E84))
                     ),
                     shape = RoundedCornerShape(50)
                 ),
             shape = RoundedCornerShape(50),
             colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent)
         ) {
-            Text("Log In", color = Color.White)
+            Text("Log In", color = Color.White, fontSize = 16.sp)
         }
 
-        Spacer(modifier = Modifier.height(10.dp))
+        Spacer(modifier = Modifier.height(16.dp))
 
+        // Navigate to sign-up screen
         TextButton(onClick = { navController.navigate("signup") }) {
-            Text("Don't have an account? Sign Up", color = MaterialTheme.colorScheme.primary)
+            Text(
+                "Don't have an account? Sign Up",
+                color = Color(0xFF4796B6),
+                fontSize = 14.sp
+            )
         }
     }
 }

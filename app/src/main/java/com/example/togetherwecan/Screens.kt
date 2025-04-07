@@ -19,7 +19,6 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 
 
-
 @Composable
 fun AppNavigator() {
     val navController = rememberNavController()
@@ -28,12 +27,25 @@ fun AppNavigator() {
         composable("main") { MainScreen(navController) }
         composable("login") { LoginScreen(navController) }
         composable("signup") { SignUpScreen(navController) }
+        composable("signupvolunter") { SignUpVolunterScreen(navController) }
         composable("home") { Home(navController) }
     }
 }
 
 @Composable
 fun MainScreen(navController: NavController) {
+    val auth = remember { com.google.firebase.auth.FirebaseAuth.getInstance() }
+    val currentUser = auth.currentUser
+
+
+    LaunchedEffect(currentUser) {
+        if (currentUser != null) {
+            navController.navigate("home") {
+                popUpTo("main") { inclusive = true }
+            }
+        }
+    }
+
     Column(
         modifier = Modifier
             .fillMaxSize()

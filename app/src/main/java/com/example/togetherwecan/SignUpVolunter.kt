@@ -1,5 +1,4 @@
 package com.example.togetherwecan
-
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -41,7 +40,7 @@ import com.google.firebase.database.ktx.database
 import com.google.firebase.ktx.Firebase
 
 @Composable
-fun SignUpScreen(navController: NavController) {
+fun SignUpVolunterScreen(navController: NavController) {
     val auth = FirebaseAuth.getInstance()
     val database = Firebase.database.reference
 
@@ -49,8 +48,6 @@ fun SignUpScreen(navController: NavController) {
     var password by remember { mutableStateOf("") }
     var confirmPassword by remember { mutableStateOf("") }
     var name by remember { mutableStateOf("") }
-    var organizationNumber by remember { mutableStateOf("") }
-
     var errorMessage by remember { mutableStateOf("") }
 
     fun isValidPassword(password: String): Boolean {
@@ -64,6 +61,7 @@ fun SignUpScreen(navController: NavController) {
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
+
         Image(
             painter = painterResource(id = R.drawable.togetherwecanlogo),
             contentDescription = "Logo User",
@@ -73,7 +71,7 @@ fun SignUpScreen(navController: NavController) {
         )
 
         Text(
-            "Sign Up As Organization",
+            "Sign Up as Volunteer",
             fontSize = 24.sp,
             style = MaterialTheme.typography.headlineSmall,
             color = Color(0xFF446E84)
@@ -85,6 +83,21 @@ fun SignUpScreen(navController: NavController) {
             Text(errorMessage, color = Color.Red)
             Spacer(modifier = Modifier.height(10.dp))
         }
+
+        OutlinedTextField(
+            value = name,
+            onValueChange = { name = it },
+            label = { Text("Full Name") },
+            shape = RoundedCornerShape(30.dp),
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(vertical = 6.dp),
+            colors = OutlinedTextFieldDefaults.colors(
+                focusedBorderColor = Color(0xFF4796B6),
+                unfocusedBorderColor = Color.LightGray,
+                cursorColor = Color(0xFF446E84)
+            )
+        )
 
         OutlinedTextField(
             value = email,
@@ -136,46 +149,12 @@ fun SignUpScreen(navController: NavController) {
             )
         )
 
-        OutlinedTextField(
-            value = name,
-            onValueChange = { name = it },
-            label = { Text("Organization Name") },
-            shape = RoundedCornerShape(30.dp),
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(vertical = 6.dp),
-            colors = OutlinedTextFieldDefaults.colors(
-                focusedBorderColor = Color(0xFF4796B6),
-                unfocusedBorderColor = Color.LightGray,
-                cursorColor = Color(0xFF446E84)
-            )
-        )
-
-        OutlinedTextField(
-            value = organizationNumber,
-            onValueChange = {
-                if (it.length <= 10 && it.all { char -> char.isDigit() }) {
-                    organizationNumber = it
-                }
-            },
-            label = { Text("Organization Number") },
-            shape = RoundedCornerShape(30.dp),
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(vertical = 6.dp),
-            colors = OutlinedTextFieldDefaults.colors(
-                focusedBorderColor = Color(0xFF4796B6),
-                unfocusedBorderColor = Color.LightGray,
-                cursorColor = Color(0xFF446E84)
-            )
-        )
-
         Spacer(modifier = Modifier.height(24.dp))
 
         Button(
             onClick = {
                 when {
-                    email.isBlank() || password.isBlank() || confirmPassword.isBlank() || name.isBlank() || organizationNumber.isBlank() -> {
+                    email.isBlank() || password.isBlank() || confirmPassword.isBlank() || name.isBlank() -> {
                         errorMessage = "Please fill in all fields."
                     }
 
@@ -199,8 +178,7 @@ fun SignUpScreen(navController: NavController) {
                                         val userMap = hashMapOf(
                                             "name" to name,
                                             "email" to email,
-                                            "organization" to true,
-                                            "organizationNumber" to organizationNumber
+                                            "organization" to false
                                         )
                                         userRef.setValue(userMap)
                                             .addOnCompleteListener { dbTask ->

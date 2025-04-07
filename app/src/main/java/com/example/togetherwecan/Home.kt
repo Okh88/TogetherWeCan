@@ -1,13 +1,20 @@
 package com.example.togetherwecan
 
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import androidx.navigation.compose.*
 
@@ -37,7 +44,8 @@ fun TopAppBar(navController: NavController) {
         title = { Text("Together We Can") },
         actions = {
             IconButton(onClick = {
-                navController.navigate("login") {
+                com.google.firebase.auth.FirebaseAuth.getInstance().signOut()
+                navController.navigate("main") {
                     popUpTo("home") { inclusive = true }
                 }
             }) {
@@ -55,23 +63,54 @@ fun BottomNavigationBar(navController: NavController) {
         BottomNavItem("profile", "Profile", Icons.Filled.AccountCircle)
     )
     val currentRoute = currentRoute(navController)
-    NavigationBar(containerColor = MaterialTheme.colorScheme.surfaceVariant) {
+
+    NavigationBar(containerColor = Color.White) {
         items.forEach { item ->
+            val isSelected = currentRoute == item.route
             NavigationBarItem(
-                selected = currentRoute == item.route,
-                onClick = { navController.navigate(item.route) },
+                selected = isSelected,
+                onClick = {
+                    if (!isSelected) {
+                        navController.navigate(item.route) {
+                            popUpTo(navController.graph.startDestinationId) {
+                                saveState = true
+                            }
+                            launchSingleTop = true
+                            restoreState = true
+                        }
+                    }
+                },
                 icon = {
-                    Icon(
-                        imageVector = item.icon,
-                        contentDescription = item.label,
-                        tint = if (currentRoute == item.route) MaterialTheme.colorScheme.primary else Color.Gray
+                    Box(
+                        modifier = Modifier
+                            .size(40.dp)
+                            .background(
+                                if (isSelected) Color(0x3397D0E8) else Color.Transparent,
+                                shape = RoundedCornerShape(12.dp)
+                            ),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            imageVector = item.icon,
+                            contentDescription = item.label,
+                            tint = if (isSelected) Color(0xFF446E84) else Color.Gray,
+                            modifier = Modifier.size(24.dp)
+                        )
+                    }
+                },
+                label = {
+                    Text(
+                        text = item.label,
+                        fontSize = 12.sp,
+                        color = if (isSelected) Color(0xFF446E84) else Color.Gray
                     )
                 },
-                label = { Text(item.label) }
+                alwaysShowLabel = true
             )
         }
     }
 }
+
 
 @Composable
 fun currentRoute(navController: NavController): String? {
