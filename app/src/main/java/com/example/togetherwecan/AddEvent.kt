@@ -38,7 +38,19 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.LocalContext
+import com.google.firebase.database.DatabaseReference
+import com.google.firebase.database.FirebaseDatabase
 import java.util.Calendar
+
+
+data class Event(
+    val eventTitle: String,
+    val eventType: String,
+    val eventAddress: String,
+    val eventDescription: String,
+    val eventStartDate: String,
+    val eventEndDate: String
+)
 
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -46,16 +58,22 @@ import java.util.Calendar
 @Composable
 fun AddEvent() {
 
-    var name by remember { mutableStateOf("") }
+    var title by remember { mutableStateOf("") }
+    var address by remember { mutableStateOf("") }
+    var description by remember { mutableStateOf("") }
     val options = listOf("Work", "Personal", "Family", "Other")
     var expanded by remember { mutableStateOf(false) }
-    var selectedOption by remember { mutableStateOf(options[0]) }
+    var selectedType by remember { mutableStateOf("") }
     val context = LocalContext.current
     val calendar = Calendar.getInstance()
     val year = calendar.get(Calendar.YEAR)
     val month = calendar.get(Calendar.MONTH)
     val day = calendar.get(Calendar.DAY_OF_MONTH)
     val scrollState = rememberScrollState()
+
+    val database: FirebaseDatabase = FirebaseDatabase.getInstance()
+    val ref = database.reference.child("/Events")
+
 
 
     var selectedStartDate by remember { mutableStateOf("") }
@@ -102,6 +120,8 @@ fun AddEvent() {
             fontSize = 24.sp,
             fontWeight = FontWeight.Bold,
             color = Color.Black,
+            modifier = Modifier
+                .padding(10.dp)
             )
 
         Spacer(modifier = Modifier.height(40.dp))
@@ -118,8 +138,8 @@ fun AddEvent() {
                 modifier = Modifier.align(Alignment.Start)
             )
             TextField(
-                value = name,
-                onValueChange = { name = "it" },  // Correct way to update state
+                value = title,
+                onValueChange = { newText -> title = newText},  // Correct way to update state
                 label = { Text("Enter Event Title") },
                 modifier = Modifier.fillMaxWidth(),
                 singleLine = true
@@ -132,7 +152,7 @@ fun AddEvent() {
                 onExpandedChange = { expanded = !expanded }
             ) {
                 TextField(
-                    value = selectedOption,
+                    value = selectedType,
                     onValueChange = {},
                     readOnly = true,
                     label = { Text("Type of Event") },
@@ -152,7 +172,7 @@ fun AddEvent() {
                         DropdownMenuItem(
                             text = { Text(option) },
                             onClick = {
-                                selectedOption = option
+                                selectedType = option
                                 expanded = false
                             }
                         )
@@ -163,8 +183,8 @@ fun AddEvent() {
             Spacer(modifier = Modifier.height(20.dp))
 
             TextField(
-                value = name,
-                onValueChange = { name = "it" },  // Correct way to update state
+                value = address,
+                onValueChange = { newText -> address = newText },  // Correct way to update state
                 label = { Text("Enter Event Adress") },
                 modifier = Modifier.fillMaxWidth(),
                 singleLine = true
@@ -173,8 +193,8 @@ fun AddEvent() {
             Spacer(modifier = Modifier.height(20.dp))
 
             TextField(
-                value = name,
-                onValueChange = { name = "it" },  // Correct way to update state
+                value = description,
+                onValueChange = { newText -> description = newText },  // Correct way to update state
                 label = { Text("Event description") },
                 modifier = Modifier
                     .fillMaxWidth()
@@ -226,6 +246,34 @@ fun AddEvent() {
                 }
             }
 
+        }
+
+        Button(
+            onClick = {
+                val event = Event(
+                    eventTitle = title,
+                    eventType = selectedType,
+                    eventAddress = address,
+                    eventDescription = description,
+                    eventStartDate = selectedStartDate,
+                    eventEndDate = selectedEndDate
+                )
+
+                val eventsRef = ref.child("org-id")
+
+                eventsRef.setValue(event)
+                    .addOnSuccessListener {
+                        println("Event added successfully!")
+                    }
+                    .addOnFailureListener { exception ->
+                        println("Failed to add event: ${exception.message}")
+                    }
+            },
+            modifier = Modifier
+                .padding(50.dp)
+                .width(150.dp)
+        ) {
+            Text("Save")
         }
 
     }
