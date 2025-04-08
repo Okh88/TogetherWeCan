@@ -183,7 +183,7 @@ fun SignUpVolunterScreen(navController: NavController) {
                                         userRef.setValue(userMap)
                                             .addOnCompleteListener { dbTask ->
                                                 if (dbTask.isSuccessful) {
-                                                    navController.navigate("home")
+                                                    navController.navigate("homevolunter")
                                                 } else {
                                                     errorMessage = "Database error. Please try again."
                                                 }

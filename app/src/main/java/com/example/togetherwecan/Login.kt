@@ -118,20 +118,38 @@ fun LoginScreen(navController: NavController) {
         Spacer(modifier = Modifier.height(30.dp))
 
         // Login button
+        // Login button
         Button(
             onClick = {
                 if (email.isEmpty() || password.isEmpty()) {
-                    // Display error message if fields are empty
                     errorMessage = "Please fill in all fields"
                 } else {
                     auth.signInWithEmailAndPassword(email, password)
                         .addOnCompleteListener { task ->
                             if (task.isSuccessful) {
-                                navController.navigate("home") {
-                                    launchSingleTop = true
+                                val userId = auth.currentUser?.uid
+                                if (userId != null) {
+                                    val database = com.google.firebase.database.FirebaseDatabase.getInstance().reference
+                                    val userRef = database.child("users").child(userId).child("organization")
+
+                                    userRef.get().addOnSuccessListener { dataSnapshot ->
+                                        val isOrganization = dataSnapshot.getValue(Boolean::class.java) == true
+                                        if (isOrganization) {
+                                            navController.navigate("home") {
+                                                popUpTo("login") { inclusive = true }
+                                            }
+                                        } else {
+                                            navController.navigate("homevolunter") {
+                                                popUpTo("login") { inclusive = true }
+                                            }
+                                        }
+                                    }.addOnFailureListener {
+                                        errorMessage = "Error retrieving user type."
+                                    }
+                                } else {
+                                    errorMessage = "User ID not found."
                                 }
                             } else {
-                                // Display error if login fails
                                 errorMessage = "Invalid email or password"
                             }
                         }
@@ -152,10 +170,11 @@ fun LoginScreen(navController: NavController) {
             Text("Log In", color = Color.White, fontSize = 16.sp)
         }
 
+
         Spacer(modifier = Modifier.height(16.dp))
 
         // Navigate to sign-up screen
-        TextButton(onClick = { navController.navigate("signup") }) {
+        TextButton(onClick = { navController.navigate("main") }) {
             Text(
                 "Don't have an account? Sign Up",
                 color = Color(0xFF4796B6),

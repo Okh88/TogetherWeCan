@@ -1,4 +1,4 @@
-package com.example.togetherwecan
+package com.example.togetherwecan.ui.theme
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
@@ -17,13 +17,11 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import androidx.navigation.compose.*
-import com.example.togetherwecan.ui.theme.BottomNavItem
-import com.example.togetherwecan.ui.theme.BottomNavigationBar
-import com.example.togetherwecan.ui.theme.TopAppBar
-import com.example.togetherwecan.ui.theme.currentRoute
+import com.example.togetherwecan.ProfileVolunterScreen
+import com.google.firebase.auth.FirebaseAuth
 
 @Composable
-fun Home(navController: NavController) {
+fun HomeVolunter(navController: NavController) {
     val tabNavController = rememberNavController()
     Scaffold(
         topBar = { TopAppBar(navController) },
@@ -31,12 +29,11 @@ fun Home(navController: NavController) {
     ) { innerPadding ->
         NavHost(
             navController = tabNavController,
-            startDestination = "my events",
+            startDestination = "events",
             modifier = Modifier.padding(innerPadding)
         ) {
-            composable("my events") { MyEvents() }
-            composable("add event") { AddEvent() }
-            composable("profile") { ProfileScreen() }
+            composable("events") { EventsVolunterScreen() }
+            composable("profilevolunter") { ProfileVolunterScreen() }
         }
     }
 }
@@ -48,9 +45,9 @@ fun TopAppBar(navController: NavController) {
         title = { Text("Together We Can") },
         actions = {
             IconButton(onClick = {
-                com.google.firebase.auth.FirebaseAuth.getInstance().signOut()
+                FirebaseAuth.getInstance().signOut()
                 navController.navigate("main") {
-                    popUpTo("home") { inclusive = true }
+                    popUpTo("homevolunter") { inclusive = true }
                 }
             }) {
                 Icon(Icons.Filled.Logout, contentDescription = "Logout")
@@ -62,9 +59,8 @@ fun TopAppBar(navController: NavController) {
 @Composable
 fun BottomNavigationBar(navController: NavController) {
     val items = listOf(
-        BottomNavItem("my events", "My Events", Icons.Filled.Folder),
-        BottomNavItem("add event", "Add Event", Icons.Filled.Add),
-        BottomNavItem("profile", "Profile", Icons.Filled.AccountCircle)
+        BottomNavItem("events", "Events", Icons.Filled.Folder),
+        BottomNavItem("profilevolunter", "Profile", Icons.Filled.AccountCircle)
     )
     val currentRoute = currentRoute(navController)
 
