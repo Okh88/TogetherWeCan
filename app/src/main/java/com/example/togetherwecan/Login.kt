@@ -129,19 +129,17 @@ fun LoginScreen(navController: NavController) {
                             if (task.isSuccessful) {
                                 val userId = auth.currentUser?.uid
                                 if (userId != null) {
-                                    val database = com.google.firebase.database.FirebaseDatabase.getInstance().reference
-                                    val userRef = database.child("users").child(userId).child("organization")
+                                    val database =
+                                        com.google.firebase.database.FirebaseDatabase.getInstance().reference
+                                    val userRef =
+                                        database.child("users").child(userId).child("organization")
 
                                     userRef.get().addOnSuccessListener { dataSnapshot ->
-                                        val isOrganization = dataSnapshot.getValue(Boolean::class.java) == true
-                                        if (isOrganization) {
-                                            navController.navigate("home") {
-                                                popUpTo("login") { inclusive = true }
-                                            }
-                                        } else {
-                                            navController.navigate("homevolunter") {
-                                                popUpTo("login") { inclusive = true }
-                                            }
+                                        // Navigate to home (whether it's organization or volunteer)
+                                        navController.navigate("home") {
+                                            popUpTo("login") { inclusive = true }
+                                            launchSingleTop = true
+                                            restoreState = true
                                         }
                                     }.addOnFailureListener {
                                         errorMessage = "Error retrieving user type."
@@ -170,10 +168,9 @@ fun LoginScreen(navController: NavController) {
             Text("Log In", color = Color.White, fontSize = 16.sp)
         }
 
-
         Spacer(modifier = Modifier.height(16.dp))
 
-        // Navigate to sign-up screen
+// Navigate to sign-up screen
         TextButton(onClick = { navController.navigate("main") }) {
             Text(
                 "Don't have an account? Sign Up",

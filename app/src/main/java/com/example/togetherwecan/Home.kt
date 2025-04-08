@@ -6,66 +6,92 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.*
+import androidx.compose.material.icons.filled.AccountCircle
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Folder
+import androidx.compose.material.icons.filled.Logout
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import androidx.navigation.compose.*
-import com.example.togetherwecan.ui.theme.BottomNavItem
-import com.example.togetherwecan.ui.theme.BottomNavigationBar
-import com.example.togetherwecan.ui.theme.TopAppBar
-import com.example.togetherwecan.ui.theme.currentRoute
+import com.example.togetherwecan.ui.theme.EventsVolunterScreen
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.database.ktx.database
+import com.google.firebase.ktx.Firebase
+
+data class BottomNavItem(val route: String, val label: String, val icon: androidx.compose.ui.graphics.vector.ImageVector)
 
 @Composable
 fun Home(navController: NavController) {
-    val tabNavController = rememberNavController()
-    Scaffold(
-        topBar = { TopAppBar(navController) },
-        bottomBar = { BottomNavigationBar(tabNavController) }
-    ) { innerPadding ->
-        NavHost(
-            navController = tabNavController,
-            startDestination = "my events",
-            modifier = Modifier.padding(innerPadding)
-        ) {
-            composable("my events") { MyEvents() }
-            composable("add event") { AddEvent() }
-            composable("profile") { ProfileScreen() }
+    // Get current user and check organization status
+    val auth = FirebaseAuth.getInstance()
+    val currentUser = auth.currentUser
+    var isOrganization by remember { mutableStateOf<Boolean?>(null) }
+
+    // Fetch organization status from Firebase
+    LaunchedEffect(currentUser) {
+        if (currentUser != null) {
+            val userId = currentUser.uid
+            val database = Firebase.database.reference
+
+            database.child("users").child(userId).child("organization").get()
+                .addOnSuccessListener { snapshot ->
+                    isOrganization = snapshot.getValue(Boolean::class.java) == true
+                }
+                .addOnFailureListener {
+                    // Handle failure
+                }
+        }
+    }
+
+    if (isOrganization == null) {
+        CircularProgressIndicator()
+    } else {
+        val tabNavController = rememberNavController()
+        Scaffold(
+            topBar = { TopAppBar(navController) },
+            bottomBar = { BottomNavigationBar(tabNavController, isOrganization!!) }
+        ) { innerPadding ->
+            NavHost(
+                navController = tabNavController,
+                startDestination = if (isOrganization == true) "my events" else "events",
+                modifier = Modifier.padding(innerPadding)
+            ) {
+                // For Organization
+                if (isOrganization == true) {
+                    composable("my events") { MyEvents() }
+                    composable("add event") { AddEvent() }
+                    composable("profile") { ProfileScreen() }
+                } else {
+                    // For Volunteer (when isOrganization is false)
+                    composable("events") { EventsVolunterScreen() }
+                    composable("profilevolunter") { ProfileVolunterScreen() }
+                }
+            }
         }
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun TopAppBar(navController: NavController) {
-    CenterAlignedTopAppBar(
-        title = { Text("Together We Can") },
-        actions = {
-            IconButton(onClick = {
-                com.google.firebase.auth.FirebaseAuth.getInstance().signOut()
-                navController.navigate("main") {
-                    popUpTo("home") { inclusive = true }
-                }
-            }) {
-                Icon(Icons.Filled.Logout, contentDescription = "Logout")
-            }
-        }
-    )
-}
+fun BottomNavigationBar(navController: NavController, isOrganization: Boolean) {
+    val items = if (isOrganization) {
+        listOf(
+            BottomNavItem("my events", "My Events", Icons.Filled.Folder),
+            BottomNavItem("add event", "Add Event", Icons.Filled.Add),
+            BottomNavItem("profile", "Profile", Icons.Filled.AccountCircle)
+        )
+    } else {
+        listOf(
+            BottomNavItem("events", "Events", Icons.Filled.Folder),
+            BottomNavItem("profilevolunter", "Profile", Icons.Filled.AccountCircle)
+        )
+    }
 
-@Composable
-fun BottomNavigationBar(navController: NavController) {
-    val items = listOf(
-        BottomNavItem("my events", "My Events", Icons.Filled.Folder),
-        BottomNavItem("add event", "Add Event", Icons.Filled.Add),
-        BottomNavItem("profile", "Profile", Icons.Filled.AccountCircle)
-    )
     val currentRoute = currentRoute(navController)
 
     NavigationBar(containerColor = Color.White) {
@@ -115,11 +141,26 @@ fun BottomNavigationBar(navController: NavController) {
     }
 }
 
-
 @Composable
 fun currentRoute(navController: NavController): String? {
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     return navBackStackEntry?.destination?.route
 }
 
-data class BottomNavItem(val route: String, val label: String, val icon: ImageVector)
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun TopAppBar(navController: NavController) {
+    CenterAlignedTopAppBar(
+        title = { Text("Together We Can") },
+        actions = {
+            IconButton(onClick = {
+                FirebaseAuth.getInstance().signOut()
+                navController.navigate("main") {
+                    popUpTo("home") { inclusive = true }
+                }
+            }) {
+                Icon(Icons.Filled.Logout, contentDescription = "Logout")
+            }
+        }
+    )
+}

@@ -1,10 +1,22 @@
 package com.example.togetherwecan
+
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
@@ -17,8 +29,7 @@ import androidx.navigation.NavController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import com.example.togetherwecan.ui.theme.HomeVolunter
-
+import com.google.firebase.auth.FirebaseAuth
 
 @Composable
 fun AppNavigator() {
@@ -30,44 +41,34 @@ fun AppNavigator() {
         composable("signup") { SignUpScreen(navController) }
         composable("signupvolunter") { SignUpVolunterScreen(navController) }
         composable("home") { Home(navController) }
-        composable("homevolunter") { HomeVolunter(navController) }
+
+
     }
 }
 
 @Composable
 fun MainScreen(navController: NavController) {
-    val auth = remember { com.google.firebase.auth.FirebaseAuth.getInstance() }
+    val auth = FirebaseAuth.getInstance()
     val currentUser = auth.currentUser
 
 
     LaunchedEffect(currentUser) {
         if (currentUser != null) {
-            val userId = currentUser.uid
-            val database = com.google.firebase.database.FirebaseDatabase.getInstance().reference
 
-            database.child("users").child(userId).child("organization").get()
-                .addOnSuccessListener { snapshot ->
-                    val isOrganization = snapshot.getValue(Boolean::class.java) == true
-
-                    if (isOrganization) {
-                        navController.navigate("home") {
-                            popUpTo("main") { inclusive = true }
-                        }
-                    } else {
-                        navController.navigate("homevolunter") {
-                            popUpTo("main") { inclusive = true }
-                        }
-                    }
+            if (navController.currentDestination?.route != "home") {
+                navController.navigate("home") {
+                    popUpTo("main") { inclusive = true }
                 }
-                .addOnFailureListener {
+            }
+        } else {
 
-                    navController.navigate("login") {
-                        popUpTo("main") { inclusive = true }
-                    }
+            if (navController.currentDestination?.route != "main") {
+                navController.navigate("main") {
+                    popUpTo("main") { inclusive = true }
                 }
+            }
         }
     }
-
 
     Column(
         modifier = Modifier
@@ -76,7 +77,7 @@ fun MainScreen(navController: NavController) {
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-    Image(
+        Image(
             painter = painterResource(id = R.drawable.togetherwecanlogo),
             contentDescription = "Logo User",
             modifier = Modifier
@@ -111,7 +112,7 @@ fun MainScreen(navController: NavController) {
                 .height(50.dp)
                 .background(
                     brush = Brush.horizontalGradient(
-                        colors = listOf(Color(0xFF97D0E8),Color(0xFF4796B6), Color(0xFF446E84))
+                        colors = listOf(Color(0xFF97D0E8), Color(0xFF4796B6), Color(0xFF446E84))
                     ),
                     shape = RoundedCornerShape(50)
                 ),
@@ -130,7 +131,7 @@ fun MainScreen(navController: NavController) {
                 .height(50.dp)
                 .background(
                     brush = Brush.horizontalGradient(
-                        colors = listOf(Color(0xFF97D0E8),Color(0xFF4796B6), Color(0xFF446E84))
+                        colors = listOf(Color(0xFF97D0E8), Color(0xFF4796B6), Color(0xFF446E84))
                     ),
                     shape = RoundedCornerShape(50)
                 ),
@@ -149,7 +150,7 @@ fun MainScreen(navController: NavController) {
                 .height(50.dp)
                 .background(
                     brush = Brush.horizontalGradient(
-                        colors = listOf(Color(0xFF97D0E8),Color(0xFF4796B6), Color(0xFF446E84))
+                        colors = listOf(Color(0xFF97D0E8), Color(0xFF4796B6), Color(0xFF446E84))
                     ),
                     shape = RoundedCornerShape(50)
                 ),
@@ -161,4 +162,3 @@ fun MainScreen(navController: NavController) {
 
     }
 }
-
