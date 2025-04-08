@@ -17,6 +17,10 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import androidx.navigation.compose.*
+import com.example.togetherwecan.ui.theme.BottomNavItem
+import com.example.togetherwecan.ui.theme.BottomNavigationBar
+import com.example.togetherwecan.ui.theme.TopAppBar
+import com.example.togetherwecan.ui.theme.currentRoute
 
 @Composable
 fun Home(navController: NavController) {

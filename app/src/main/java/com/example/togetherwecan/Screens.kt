@@ -17,6 +17,7 @@ import androidx.navigation.NavController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import com.example.togetherwecan.ui.theme.HomeVolunter
 
 
 @Composable
@@ -29,6 +30,7 @@ fun AppNavigator() {
         composable("signup") { SignUpScreen(navController) }
         composable("signupvolunter") { SignUpVolunterScreen(navController) }
         composable("home") { Home(navController) }
+        composable("homevolunter") { HomeVolunter(navController) }
     }
 }
 
@@ -40,11 +42,32 @@ fun MainScreen(navController: NavController) {
 
     LaunchedEffect(currentUser) {
         if (currentUser != null) {
-            navController.navigate("home") {
-                popUpTo("main") { inclusive = true }
-            }
+            val userId = currentUser.uid
+            val database = com.google.firebase.database.FirebaseDatabase.getInstance().reference
+
+            database.child("users").child(userId).child("organization").get()
+                .addOnSuccessListener { snapshot ->
+                    val isOrganization = snapshot.getValue(Boolean::class.java) == true
+
+                    if (isOrganization) {
+                        navController.navigate("home") {
+                            popUpTo("main") { inclusive = true }
+                        }
+                    } else {
+                        navController.navigate("homevolunter") {
+                            popUpTo("main") { inclusive = true }
+                        }
+                    }
+                }
+                .addOnFailureListener {
+
+                    navController.navigate("login") {
+                        popUpTo("main") { inclusive = true }
+                    }
+                }
         }
     }
+
 
     Column(
         modifier = Modifier
