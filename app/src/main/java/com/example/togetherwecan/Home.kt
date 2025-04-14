@@ -19,7 +19,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import androidx.navigation.compose.*
-import com.example.togetherwecan.ui.theme.EventsVolunterScreen
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.ktx.database
 import com.google.firebase.ktx.Firebase
@@ -59,7 +58,7 @@ fun Home(navController: NavController) {
         ) { innerPadding ->
             NavHost(
                 navController = tabNavController,
-                startDestination = if (isOrganization == true) "my events" else "events",
+                startDestination = if (isOrganization == true) "my events" else "myeventsvolunter",
                 modifier = Modifier.padding(innerPadding)
             ) {
                 // For Organization
@@ -69,6 +68,7 @@ fun Home(navController: NavController) {
                     composable("profile") { ProfileScreen() }
                 } else {
                     // For Volunteer (when isOrganization is false)
+                    composable("myeventsvolunter") { MyEventsVolunterScreen()}
                     composable("events") { EventsVolunterScreen() }
                     composable("profilevolunter") { ProfileVolunterScreen() }
                 }
@@ -87,7 +87,8 @@ fun BottomNavigationBar(navController: NavController, isOrganization: Boolean) {
         )
     } else {
         listOf(
-            BottomNavItem("events", "Events", Icons.Filled.Folder),
+            BottomNavItem("myeventsvolunter", "My Events", Icons.Filled.Folder),
+            BottomNavItem("events", "Join Now", Icons.Filled.Folder),
             BottomNavItem("profilevolunter", "Profile", Icons.Filled.AccountCircle)
         )
     }

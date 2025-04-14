@@ -1,4 +1,4 @@
-package com.example.togetherwecan.ui.theme
+package com.example.togetherwecan
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -18,6 +18,6 @@ fun EventsVolunterScreen() {
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Text(text = "Events Volunter", fontSize = 24.sp)
+        Text(text = "Organization Events", fontSize = 24.sp)
     }
 }
