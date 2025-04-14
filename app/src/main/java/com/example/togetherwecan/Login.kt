@@ -118,39 +118,40 @@ fun LoginScreen(navController: NavController) {
         Spacer(modifier = Modifier.height(30.dp))
 
         // Login button
-        // Login button
         Button(
             onClick = {
-                if (email.isEmpty() || password.isEmpty()) {
-                    errorMessage = "Please fill in all fields"
-                } else {
-                    auth.signInWithEmailAndPassword(email, password)
-                        .addOnCompleteListener { task ->
-                            if (task.isSuccessful) {
-                                val userId = auth.currentUser?.uid
-                                if (userId != null) {
-                                    val database =
-                                        com.google.firebase.database.FirebaseDatabase.getInstance().reference
-                                    val userRef =
-                                        database.child("users").child(userId).child("organization")
+                when {
+                    email.isBlank() -> errorMessage = "Please enter your email to log in."
+                    password.isBlank() -> errorMessage = "Please enter your password to log in."
+                    else -> {
+                        errorMessage = ""
+                        auth.signInWithEmailAndPassword(email, password)
+                            .addOnCompleteListener { task ->
+                                if (task.isSuccessful) {
+                                    val userId = auth.currentUser?.uid
+                                    if (userId != null) {
+                                        val database =
+                                            com.google.firebase.database.FirebaseDatabase.getInstance().reference
+                                        val userRef =
+                                            database.child("users").child(userId).child("organization")
 
-                                    userRef.get().addOnSuccessListener { dataSnapshot ->
-                                        // Navigate to home (whether it's organization or volunteer)
-                                        navController.navigate("home") {
-                                            popUpTo("login") { inclusive = true }
-                                            launchSingleTop = true
-                                            restoreState = true
+                                        userRef.get().addOnSuccessListener {
+                                            navController.navigate("home") {
+                                                popUpTo("login") { inclusive = true }
+                                                launchSingleTop = true
+                                                restoreState = true
+                                            }
+                                        }.addOnFailureListener {
+                                            errorMessage = "Error retrieving user type."
                                         }
-                                    }.addOnFailureListener {
-                                        errorMessage = "Error retrieving user type."
+                                    } else {
+                                        errorMessage = "User ID not found."
                                     }
                                 } else {
-                                    errorMessage = "User ID not found."
+                                    errorMessage = "Invalid email or password."
                                 }
-                            } else {
-                                errorMessage = "Invalid email or password"
                             }
-                        }
+                    }
                 }
             },
             modifier = Modifier
@@ -167,6 +168,7 @@ fun LoginScreen(navController: NavController) {
         ) {
             Text("Log In", color = Color.White, fontSize = 16.sp)
         }
+
 
         Spacer(modifier = Modifier.height(16.dp))
 

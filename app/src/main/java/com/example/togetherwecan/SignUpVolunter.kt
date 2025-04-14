@@ -152,55 +152,60 @@ fun SignUpVolunterScreen(navController: NavController) {
         Spacer(modifier = Modifier.height(24.dp))
 
         Button(
+
             onClick = {
                 when {
-                    email.isBlank() || password.isBlank() || confirmPassword.isBlank() || name.isBlank() -> {
-                        errorMessage = "Please fill in all fields."
-                    }
-
-                    !isValidPassword(password) -> {
-                        errorMessage = "Password must be at least 6 characters."
-                    }
-
-                    password != confirmPassword -> {
-                        errorMessage = "Passwords do not match."
-                    }
-
+                    name.isBlank() -> errorMessage = "Please enter your full name."
+                    email.isBlank() -> errorMessage = "Please enter your email."
+                    password.isBlank() -> errorMessage = "Please enter a password."
+                    confirmPassword.isBlank() -> errorMessage = "Please confirm your password."
+                    !isValidPassword(password) -> errorMessage = "Password must be at least 6 characters."
+                    password != confirmPassword -> errorMessage = "Passwords do not match."
                     else -> {
                         errorMessage = ""
-                        auth.createUserWithEmailAndPassword(email, password)
-                            .addOnCompleteListener { task ->
-                                if (task.isSuccessful) {
-                                    val user = auth.currentUser
-                                    if (user != null) {
-                                        val userId = user.uid
-                                        val userRef = database.child("users").child(userId)
-                                        val userMap = hashMapOf(
-                                            "name" to name,
-                                            "email" to email,
-                                            "organization" to false
-                                        )
-                                        userRef.setValue(userMap)
-                                            .addOnCompleteListener { dbTask ->
-                                                if (dbTask.isSuccessful) {
-                                                    navController.navigate("home")
-                                                } else {
-                                                    errorMessage = "Database error. Please try again."
-                                                }
-                                            }
-                                    }
+
+                        auth.fetchSignInMethodsForEmail(email).addOnCompleteListener { methodTask ->
+                            if (methodTask.isSuccessful) {
+                                val signInMethods = methodTask.result?.signInMethods
+                                if (!signInMethods.isNullOrEmpty()) {
+                                    errorMessage = "This email is already registered."
                                 } else {
-                                    val exceptionMessage = task.exception?.message ?: "Sign up failed."
-                                    errorMessage = if (exceptionMessage.contains("email address is already in use", ignoreCase = true)) {
-                                        "This email is already registered."
-                                    } else {
-                                        exceptionMessage
-                                    }
+
+                                    auth.createUserWithEmailAndPassword(email, password)
+                                        .addOnCompleteListener { task ->
+                                            if (task.isSuccessful) {
+                                                val user = auth.currentUser
+                                                if (user != null) {
+                                                    val userId = user.uid
+                                                    val userRef = database.child("users").child(userId)
+                                                    val userMap = hashMapOf(
+                                                        "name" to name,
+                                                        "email" to email,
+                                                        "organization" to false
+                                                    )
+                                                    userRef.setValue(userMap)
+                                                        .addOnCompleteListener { dbTask ->
+                                                            if (dbTask.isSuccessful) {
+                                                                navController.navigate("home")
+                                                            } else {
+                                                                errorMessage = "Database error. Please try again."
+                                                            }
+                                                        }
+                                                }
+                                            } else {
+                                                val exceptionMessage = task.exception?.message ?: "Sign up failed."
+                                                errorMessage = exceptionMessage
+                                            }
+                                        }
                                 }
+                            } else {
+                                errorMessage = "Something went wrong. Try again."
                             }
+                        }
                     }
                 }
-            },
+            }
+,
             modifier = Modifier
                 .fillMaxWidth(0.65f)
                 .height(50.dp)
