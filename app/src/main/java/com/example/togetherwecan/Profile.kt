@@ -37,7 +37,10 @@ fun ProfileScreen() {
     val database = Firebase.database.reference
     val storage = Firebase.storage
 
-    var organizationname by remember { mutableStateOf("") }
+
+    //var organizationname by remember { mutableStateOf("") }
+    var userName by remember { mutableStateOf("") }
+
     var email by remember { mutableStateOf("") }
     var phonenumber by remember { mutableStateOf("") }
     var organizationnumber by remember { mutableStateOf("") }
@@ -55,7 +58,8 @@ fun ProfileScreen() {
         selectedImageUri = uri
     }
 
-    // Fetch existing data from Firebase
+    /*
+    // Firebase
     LaunchedEffect(userId) {
         userId?.let { uid ->
             try {
@@ -72,13 +76,13 @@ fun ProfileScreen() {
             }
         }
     }
-
+*/
     suspend fun saveChanges() {
         isSaving = true
         saveMessage = ""
 
         try {
-            // Upload new image if selected
+
             selectedImageUri?.let { uri ->
                 val fileName = UUID.randomUUID().toString()
                 val imageRef = storage.reference.child("profile_images/$userId/$fileName.jpg")
@@ -91,10 +95,9 @@ fun ProfileScreen() {
                 }
             }
 
-            // Save other personal details
             userId?.let { uid ->
                 val personalRef = database.child("users").child(uid).child("personalinfo")
-                personalRef.child("organizationname").setValue(organizationname).await()
+                personalRef.child("userName").setValue(userName).await()
                 personalRef.child("email").setValue(email).await()
                 personalRef.child("phonenumber").setValue(phonenumber).await()
                 personalRef.child("organizationnumber").setValue(organizationnumber).await()
@@ -102,7 +105,7 @@ fun ProfileScreen() {
 
             currentUser?.updateEmail(email)?.await()
             val profileUpdates = userProfileChangeRequest {
-                displayName = organizationname
+                displayName = userName
             }
             currentUser?.updateProfile(profileUpdates)?.await()
 
@@ -149,14 +152,12 @@ fun ProfileScreen() {
                     .padding(bottom = 24.dp)
             )
         }
-
-
         Spacer(modifier = Modifier.height(20.dp))
 
         // Name Field
         TextField(
-            value = organizationname,
-            onValueChange = { organizationname = it },
+            value = userName,
+            onValueChange = { userName = it },
             label = { Text("Organization Name") },
             modifier = Modifier
                 .fillMaxWidth()
@@ -258,4 +259,3 @@ fun ProfileScreen() {
 fun ProfileScreenPreview() {
     ProfileScreen()
 }
-
