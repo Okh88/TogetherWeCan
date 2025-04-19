@@ -29,6 +29,7 @@ import androidx.navigation.NavController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import com.example.togetherwecan.ui.theme.EventDetails
 import com.google.firebase.auth.FirebaseAuth
 
 @Composable
@@ -41,6 +42,9 @@ fun AppNavigator() {
         composable("signup") { SignUpScreen(navController) }
         composable("signupvolunter") { SignUpVolunterScreen(navController) }
         composable("home") { Home(navController) }
+        composable("eventdetails/{orgId}/{eventId}") { backStackEntry ->
+            EventDetails(navController = navController, navBackStackEntry = backStackEntry)
+        }
 
 
     }

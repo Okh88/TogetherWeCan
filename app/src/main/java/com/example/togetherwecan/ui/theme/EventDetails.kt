@@ -1,10 +1,7 @@
-package com.example.togetherwecan
+package com.example.togetherwecan.ui.theme
 
 import android.app.DatePickerDialog
 import android.util.Log
-import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.Image
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -13,60 +10,67 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExposedDropdownMenuBox
 import androidx.compose.material3.ExposedDropdownMenuDefaults
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
-import androidx.compose.ui.platform.LocalContext
-import com.google.firebase.auth.FirebaseAuth
+import androidx.navigation.NavBackStackEntry
+import androidx.navigation.NavController
+import com.example.togetherwecan.Events
+import com.example.togetherwecan.TopAppBar
 import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
-import com.google.firebase.database.DatabaseReference
 import com.google.firebase.database.FirebaseDatabase
 import com.google.firebase.database.ValueEventListener
+import com.google.firebase.ktx.Firebase
 import java.util.Calendar
-import java.util.UUID
-
-
-data class Event(
-    val eventTitle: String,
-    val eventType: String,
-    val eventAddress: String,
-    val eventDescription: String,
-    val eventStartDate: String,
-    val eventEndDate: String
-)
-
 
 @OptIn(ExperimentalMaterial3Api::class)
-@Preview
 @Composable
-fun AddEvent() {
+fun EventDetails(navController: NavController, navBackStackEntry: NavBackStackEntry) {
+    val orgId = navBackStackEntry.arguments?.getString("orgId") ?: ""
+    val eventId = navBackStackEntry.arguments?.getString("eventId") ?: ""
 
-    var title by remember { mutableStateOf("") }
-    var address by remember { mutableStateOf("") }
-    var description by remember { mutableStateOf("") }
+    var eventTitle by remember { mutableStateOf("") }
+    var eventAddress by remember { mutableStateOf("") }
+    var eventDescription by remember { mutableStateOf("") }
+    var eventType by remember { mutableStateOf("") }
+    var selectedType by remember { mutableStateOf("") }
+    var selectedStartDate by remember { mutableStateOf("") }
+    var selectedEndDate by remember { mutableStateOf("") }
+    var expanded by remember { mutableStateOf(false) }
+    var madeChange by remember { mutableStateOf(false) }
+    val context = LocalContext.current
+    val calendar = Calendar.getInstance()
+    val year = calendar.get(Calendar.YEAR)
+    val month = calendar.get(Calendar.MONTH)
+    val day = calendar.get(Calendar.DAY_OF_MONTH)
+    val scrollState = rememberScrollState()
+
     val options = listOf(
         "volunteerDrives",
         "charityFundraisers",
@@ -103,40 +107,30 @@ fun AddEvent() {
         "protestsDemonstrations",
         "petitionsAndAdvocacyCampaigns"
     )
-    var expanded by remember { mutableStateOf(false) }
-    var selectedType by remember { mutableStateOf("") }
-    val context = LocalContext.current
-    val calendar = Calendar.getInstance()
-    val year = calendar.get(Calendar.YEAR)
-    val month = calendar.get(Calendar.MONTH)
-    val day = calendar.get(Calendar.DAY_OF_MONTH)
-    val scrollState = rememberScrollState()
-
     val database: FirebaseDatabase = FirebaseDatabase.getInstance()
-    val ref = database.reference.child("/Events")
-    val firebaseAuth = FirebaseAuth.getInstance()
-    val currUser = firebaseAuth.currentUser
-    var orgId: String? = null
-    val userRef = database.getReference("users").child("${currUser?.uid}")
-
-    userRef.addListenerForSingleValueEvent(object : ValueEventListener {
-        override fun onDataChange(snapshot: DataSnapshot) {
-            orgId = snapshot.child("organizationNumber").getValue(String::class.java)
-
-        }
-
-        override fun onCancelled(error: DatabaseError) {
-            Log.e("FirebaseData", "Failed to read value.", error.toException())
-        }
-    })
-
-    Log.d("Test", "${currUser?.uid}")
+    val singleEventsRef = database.getReference("Events").child("$orgId").child("$eventId")
 
 
+    LaunchedEffect(Unit) {
+        singleEventsRef.addListenerForSingleValueEvent(object : ValueEventListener {
+            override fun onDataChange(snapshot: DataSnapshot) {
+                eventTitle = snapshot.child("eventTitle").getValue(String::class.java) ?: ""
+                eventType = snapshot.child("eventType").getValue(String::class.java) ?: ""
+                eventDescription = snapshot.child("eventDescription").getValue(String::class.java) ?: ""
+                eventAddress = snapshot.child("eventAddress").getValue(String::class.java) ?: ""
+                selectedStartDate = snapshot.child("eventStartDate").getValue(String::class.java) ?: ""
+                selectedEndDate = snapshot.child("eventEndDate").getValue(String::class.java) ?: ""
 
-    var selectedStartDate by remember { mutableStateOf("") }
-    var selectedEndDate by remember { mutableStateOf("") }
+                Log.d("MyLogs", "$eventTitle  eventTitle")
+                Log.d("MyLogs", "$eventDescription eventDescription")
+                Log.d("MyLogs", "$snapshot")
+            }
 
+            override fun onCancelled(error: DatabaseError) {
+                Log.e("MyEvents", "Failed to load user", error.toException())
+            }
+        })
+    }
 
     // Date picker dialog
     val endDatePickerDialog = DatePickerDialog(
@@ -163,42 +157,47 @@ fun AddEvent() {
         year, month, day
     )
 
-    startDatePickerDialog.datePicker.minDate = System.currentTimeMillis() // Disable past dates
-
-
     Column(
         modifier = Modifier
-            .fillMaxSize()
-            .verticalScroll(scrollState)
-            .background(Color.White),
-        //verticalArrangement = Arrangement.SpaceBetween,
-        horizontalAlignment = Alignment.CenterHorizontally
+            .padding(20.dp),
     ) {
-        Text("Add New Event",
-            fontSize = 24.sp,
-            fontWeight = FontWeight.Bold,
-            color = Color.Black,
-            modifier = Modifier
-                .padding(10.dp)
-            )
+        CenterAlignedTopAppBar(
+            title = { Text("Event Description") },
+            navigationIcon = {
+                IconButton(onClick = { navController.popBackStack() }) {
+                    Icon(Icons.Filled.ArrowBack, contentDescription = "Back")
+                }
+            }
+        )
 
         Spacer(modifier = Modifier.height(40.dp))
 
+        Text(
+            "Event $eventTitle",
+            fontSize = 24.sp,
+            fontWeight = FontWeight.Bold,
+            color = Color.Black,
+            //modifier = Modifier.padding(20.dp)
+        )
+
+        Spacer(modifier = Modifier.height(40.dp))
 
         Column(
-            modifier = Modifier
-                .width(300.dp),
-            verticalArrangement = Arrangement.SpaceBetween,
+            modifier = Modifier.verticalScroll(scrollState),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Text(
-                "Title:",
-                modifier = Modifier.align(Alignment.Start)
-            )
+                "Title",
+                modifier = Modifier
+                    .align(Alignment.Start)
+                )
+
             TextField(
-                value = title,
-                onValueChange = { newText -> title = newText},
-                label = { Text("Enter Event Title") },
+                value = eventTitle,
+                onValueChange = { newText ->
+                    eventTitle = newText
+                    madeChange = true
+                },
                 modifier = Modifier.fillMaxWidth(),
                 singleLine = true
             )
@@ -210,8 +209,10 @@ fun AddEvent() {
                 onExpandedChange = { expanded = !expanded }
             ) {
                 TextField(
-                    value = selectedType,
-                    onValueChange = {},
+                    value = eventType,
+                    onValueChange = {
+                        madeChange = true
+                    },
                     readOnly = true,
                     label = { Text("Type of Event") },
                     trailingIcon = {
@@ -230,8 +231,9 @@ fun AddEvent() {
                         DropdownMenuItem(
                             text = { Text(option) },
                             onClick = {
-                                selectedType = option
+                                eventType = option
                                 expanded = false
+                                madeChange = true
                             }
                         )
                     }
@@ -240,19 +242,25 @@ fun AddEvent() {
 
             Spacer(modifier = Modifier.height(20.dp))
 
+
             TextField(
-                value = address,
-                onValueChange = { newText -> address = newText },  // Correct way to update state
+                value = eventAddress,
+                onValueChange = { newText ->
+                    eventAddress = newText
+                    madeChange = true
+                },
                 label = { Text("Enter Event Adress") },
                 modifier = Modifier.fillMaxWidth(),
                 singleLine = true
             )
-
             Spacer(modifier = Modifier.height(20.dp))
 
             TextField(
-                value = description,
-                onValueChange = { newText -> description = newText },  // Correct way to update state
+                value = eventDescription,
+                onValueChange = { newText ->
+                    eventDescription = newText
+                    madeChange = true
+                                },
                 label = { Text("Event description") },
                 modifier = Modifier
                     .fillMaxWidth()
@@ -304,46 +312,16 @@ fun AddEvent() {
                 }
             }
 
+            Spacer(modifier = Modifier.height(40.dp))
+
+            Button(
+                onClick = {},
+                enabled = madeChange
+            ) {
+                Text("Save Changes")
+            }
+
         }
-
-        Button(
-            onClick = {
-                val event = Event(
-                    eventTitle = title,
-                    eventType = selectedType,
-                    eventAddress = address,
-                    eventDescription = description,
-                    eventStartDate = selectedStartDate,
-                    eventEndDate = selectedEndDate
-                )
-
-                if(orgId != null) {
-                    val eventsRef = ref.child("$orgId").child(UUID.randomUUID().toString())
-
-                    eventsRef.setValue(event)
-                        .addOnSuccessListener {
-                            println("Event added successfully!")
-                        }
-                        .addOnFailureListener { exception ->
-                            println("Failed to add event: ${exception.message}")
-                        }
-                } //else show a failure toast
-
-                title = ""
-                selectedType = ""
-                address = ""
-                description = ""
-                selectedStartDate = ""
-                selectedEndDate = ""
-
-                Log.d("Test", "$title $selectedType $address")
-            },
-            modifier = Modifier
-                .padding(50.dp)
-                .width(150.dp)
-        ) {
-            Text("Save")
-        }
-
     }
 }
+

@@ -63,7 +63,7 @@ fun Home(navController: NavController) {
             ) {
                 // For Organization
                 if (isOrganization == true) {
-                    composable("my events") { MyEvents() }
+                    composable("my events") { MyEvents(navController) }
                     composable("add event") { AddEvent() }
                     composable("profile") { ProfileScreen() }
                 } else {
