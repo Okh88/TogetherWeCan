@@ -180,6 +180,7 @@ fun SignUpScreen(navController: NavController) {
                     confirmPassword.isBlank() -> errorMessage = "Please confirm your password."
                     name.isBlank() -> errorMessage = "Please enter your organization name."
                     organizationNumber.isBlank() -> errorMessage = "Please enter your organization number."
+                    organizationNumber.length != 10 -> errorMessage = "Organization number must be exactly 10 digits."
                     !isValidPassword(password) -> errorMessage = "Password must be at least 6 characters."
                     password != confirmPassword -> errorMessage = "Passwords do not match."
                     else -> {
