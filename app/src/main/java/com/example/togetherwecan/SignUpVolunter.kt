@@ -1,4 +1,5 @@
 package com.example.togetherwecan
+
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -10,6 +11,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Email
 import androidx.compose.material.icons.filled.Lock
@@ -31,6 +33,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -48,6 +51,7 @@ fun SignUpVolunterScreen(navController: NavController) {
     var password by remember { mutableStateOf("") }
     var confirmPassword by remember { mutableStateOf("") }
     var name by remember { mutableStateOf("") }
+    var phoneNumber by remember { mutableStateOf("") }
     var errorMessage by remember { mutableStateOf("") }
 
     fun isValidPassword(password: String): Boolean {
@@ -116,6 +120,26 @@ fun SignUpVolunterScreen(navController: NavController) {
         )
 
         OutlinedTextField(
+            value = phoneNumber,
+            onValueChange = { input ->
+                if (input.all { it.isDigit() }) {
+                    phoneNumber = input
+                }
+            },
+            label = { Text("Phone Number") },
+            shape = RoundedCornerShape(30.dp),
+            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(vertical = 6.dp),
+            colors = OutlinedTextFieldDefaults.colors(
+                focusedBorderColor = Color(0xFF4796B6),
+                unfocusedBorderColor = Color.LightGray,
+                cursorColor = Color(0xFF446E84)
+            )
+        )
+
+        OutlinedTextField(
             value = password,
             onValueChange = { password = it },
             label = { Text("Password") },
@@ -152,11 +176,11 @@ fun SignUpVolunterScreen(navController: NavController) {
         Spacer(modifier = Modifier.height(24.dp))
 
         Button(
-
             onClick = {
                 when {
                     name.isBlank() -> errorMessage = "Please enter your full name."
                     email.isBlank() -> errorMessage = "Please enter your email."
+                    phoneNumber.isBlank() -> errorMessage = "Please enter your phone number."
                     password.isBlank() -> errorMessage = "Please enter a password."
                     confirmPassword.isBlank() -> errorMessage = "Please confirm your password."
                     !isValidPassword(password) -> errorMessage = "Password must be at least 6 characters."
@@ -170,7 +194,6 @@ fun SignUpVolunterScreen(navController: NavController) {
                                 if (!signInMethods.isNullOrEmpty()) {
                                     errorMessage = "This email is already registered."
                                 } else {
-
                                     auth.createUserWithEmailAndPassword(email, password)
                                         .addOnCompleteListener { task ->
                                             if (task.isSuccessful) {
@@ -181,6 +204,7 @@ fun SignUpVolunterScreen(navController: NavController) {
                                                     val userMap = hashMapOf(
                                                         "name" to name,
                                                         "email" to email,
+                                                        "phoneNumber" to phoneNumber,
                                                         "organization" to false
                                                     )
                                                     userRef.setValue(userMap)
@@ -204,8 +228,7 @@ fun SignUpVolunterScreen(navController: NavController) {
                         }
                     }
                 }
-            }
-,
+            },
             modifier = Modifier
                 .fillMaxWidth(0.65f)
                 .height(50.dp)
