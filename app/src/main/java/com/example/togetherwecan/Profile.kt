@@ -58,25 +58,22 @@ fun ProfileScreen() {
         selectedImageUri = uri
     }
 
-    /*
-    // Firebase
     LaunchedEffect(userId) {
         userId?.let { uid ->
             try {
                 val snapshot = database.child("users").child(uid).get().await()
-                snapshot.child("personalinfo").let { personal ->
-                    organizationname = personal.child("organizationname").getValue(String::class.java) ?: ""
-                    email = personal.child("email").getValue(String::class.java) ?: ""
-                    phonenumber = personal.child("phonenumber").getValue(String::class.java) ?: ""
-                    organizationnumber = personal.child("organizationnumber").getValue(String::class.java) ?: ""
-                }
+
+                userName = snapshot.child("name").getValue(String::class.java) ?: ""
+                email = snapshot.child("email").getValue(String::class.java) ?: ""
+                organizationnumber = snapshot.child("organizationNumber").getValue(String::class.java) ?: ""
+                phonenumber = snapshot.child("phonenumber").getValue(String::class.java) ?: ""
                 imageUrl = snapshot.child("image").getValue(String::class.java) ?: ""
             } catch (e: Exception) {
                 e.printStackTrace()
             }
         }
     }
-*/
+
     suspend fun saveChanges() {
         isSaving = true
         saveMessage = ""
@@ -128,7 +125,7 @@ fun ProfileScreen() {
         // Header
         Row(
             modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.Center, // Center horizontally
+            horizontalArrangement = Arrangement.Center,
             verticalAlignment = Alignment.CenterVertically
         ) {
             Text(text = "Organization Profile", fontSize = 30.sp)

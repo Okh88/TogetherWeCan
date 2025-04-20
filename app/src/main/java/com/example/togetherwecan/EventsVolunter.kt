@@ -1,4 +1,4 @@
-package com.example.togetherwecan
+/*package com.example.togetherwecan
 
 import android.os.Bundle
 import androidx.activity.ComponentActivity
@@ -36,7 +36,7 @@ import androidx.compose.ui.unit.sp
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun MainScreen() {
+fun MyEventsVolunter() {
     val organizations = List(3) {
         Organization("Humanitarian Organization", "12 / 06 / 2025")
     }
@@ -181,9 +181,9 @@ data class Organization(val name: String, val date: String)
 
 @Preview(showBackground = true)
 @Composable
-fun MainScreenPreview() {
+fun MyEventsVolunterPreview() {
     MaterialTheme {
-        MainScreen()
+        MyEventsVolunter()
     }
 }
-
+*/
