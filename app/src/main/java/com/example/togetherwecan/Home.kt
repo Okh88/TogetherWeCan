@@ -152,14 +152,37 @@ fun currentRoute(navController: NavController): String? {
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TopAppBar(navController: NavController) {
+    var showDialog by remember { mutableStateOf(false) }
+
+    if (showDialog) {
+        AlertDialog(
+            onDismissRequest = { showDialog = false },
+            title = { Text(text = "Log out") },
+            text = { Text("Are you sure you want to log out?") },
+            confirmButton = {
+                TextButton(onClick = {
+                    showDialog = false
+                    FirebaseAuth.getInstance().signOut()
+                    navController.navigate("main") {
+                        popUpTo("home") { inclusive = true }
+                    }
+                }) {
+                    Text("Yes")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showDialog = false }) {
+                    Text("No")
+                }
+            }
+        )
+    }
+
     CenterAlignedTopAppBar(
         title = { Text("Together We Can") },
         actions = {
             IconButton(onClick = {
-                FirebaseAuth.getInstance().signOut()
-                navController.navigate("main") {
-                    popUpTo("home") { inclusive = true }
-                }
+                showDialog = true
             }) {
                 Icon(Icons.Filled.Logout, contentDescription = "Logout")
             }
