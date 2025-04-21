@@ -1,11 +1,11 @@
 package com.example.togetherwecan
 
 import android.net.Uri
+import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -16,6 +16,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -27,7 +28,7 @@ import com.google.firebase.ktx.Firebase
 import com.google.firebase.storage.ktx.storage
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
-import java.util.UUID
+import java.util.*
 
 @Composable
 fun ProfileScreen() {
@@ -36,23 +37,18 @@ fun ProfileScreen() {
     val currentUser = auth.currentUser
     val database = Firebase.database.reference
     val storage = Firebase.storage
+    val context = LocalContext.current
 
-
-    //var organizationname by remember { mutableStateOf("") }
-    var userName by remember { mutableStateOf("") }
-
+    var name by remember { mutableStateOf("") }
     var email by remember { mutableStateOf("") }
-    var phonenumber by remember { mutableStateOf("") }
-    var organizationnumber by remember { mutableStateOf("") }
+    var organizationNumber by remember { mutableStateOf("") }
 
-    var imageUrl by remember { mutableStateOf("") }
     var selectedImageUri by remember { mutableStateOf<Uri?>(null) }
 
     var isSaving by remember { mutableStateOf(false) }
-    var saveMessage by remember { mutableStateOf("") }
     val coroutineScope = rememberCoroutineScope()
 
-    val imagePicker = rememberLauncherForActivityResult(
+    rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent()
     ) { uri: Uri? ->
         selectedImageUri = uri
@@ -62,12 +58,9 @@ fun ProfileScreen() {
         userId?.let { uid ->
             try {
                 val snapshot = database.child("users").child(uid).get().await()
-
-                userName = snapshot.child("name").getValue(String::class.java) ?: ""
+                name = snapshot.child("name").getValue(String::class.java) ?: ""
                 email = snapshot.child("email").getValue(String::class.java) ?: ""
-                organizationnumber = snapshot.child("organizationNumber").getValue(String::class.java) ?: ""
-                phonenumber = snapshot.child("phonenumber").getValue(String::class.java) ?: ""
-                imageUrl = snapshot.child("image").getValue(String::class.java) ?: ""
+                organizationNumber = snapshot.child("organizationNumber").getValue(String::class.java) ?: ""
             } catch (e: Exception) {
                 e.printStackTrace()
             }
@@ -76,10 +69,8 @@ fun ProfileScreen() {
 
     suspend fun saveChanges() {
         isSaving = true
-        saveMessage = ""
 
         try {
-
             selectedImageUri?.let { uri ->
                 val fileName = UUID.randomUUID().toString()
                 val imageRef = storage.reference.child("profile_images/$userId/$fileName.jpg")
@@ -87,29 +78,24 @@ fun ProfileScreen() {
                 val downloadUrl = imageRef.downloadUrl.await().toString()
                 userId?.let { uid ->
                     database.child("users").child(uid).child("image").setValue(downloadUrl).await()
-                    imageUrl = downloadUrl
                     selectedImageUri = null
                 }
             }
 
             userId?.let { uid ->
-                val personalRef = database.child("users").child(uid).child("personalinfo")
-                personalRef.child("userName").setValue(userName).await()
-                personalRef.child("email").setValue(email).await()
-                personalRef.child("phonenumber").setValue(phonenumber).await()
-                personalRef.child("organizationnumber").setValue(organizationnumber).await()
+                database.child("users").child(uid).child("name").setValue(name).await()
             }
 
-            currentUser?.updateEmail(email)?.await()
             val profileUpdates = userProfileChangeRequest {
-                displayName = userName
+                displayName = name
             }
             currentUser?.updateProfile(profileUpdates)?.await()
 
-            saveMessage = "Changes saved successfully"
+            Toast.makeText(context, "Changes saved successfully", Toast.LENGTH_SHORT).show()
+
         } catch (e: Exception) {
             e.printStackTrace()
-            saveMessage = "Error saving changes: ${e.localizedMessage}"
+            Toast.makeText(context, "Error saving changes: ${e.localizedMessage}", Toast.LENGTH_SHORT).show()
         } finally {
             isSaving = false
         }
@@ -122,39 +108,27 @@ fun ProfileScreen() {
         verticalArrangement = Arrangement.Top,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        // Header
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.Center,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Text(text = "Organization Profile", fontSize = 30.sp)
-        }
-
+        Text(text = "Organization Profile", fontSize = 30.sp)
         Spacer(modifier = Modifier.height(20.dp))
 
-        // Profile Picture
         Box(
             contentAlignment = Alignment.Center,
             modifier = Modifier
-                .size(120.dp)
+                .size(90.dp)
                 .clip(CircleShape)
-                .border(2.dp, Color.Gray, CircleShape)
         ) {
             Image(
                 painter = painterResource(id = R.drawable.togetherwecanlogo),
-                contentDescription = "Logo User",
-                modifier = Modifier
-                    .size(90.dp)
-                    .padding(bottom = 24.dp)
+                contentDescription = "Organization Logo",
+                modifier = Modifier.fillMaxSize()
             )
         }
+
         Spacer(modifier = Modifier.height(20.dp))
 
-        // Name Field
         TextField(
-            value = userName,
-            onValueChange = { userName = it },
+            value = name,
+            onValueChange = { name = it },
             label = { Text("Organization Name") },
             modifier = Modifier
                 .fillMaxWidth()
@@ -165,59 +139,37 @@ fun ProfileScreen() {
                 cursorColor = Color(0xFF446E84)
             )
         )
-        Spacer(modifier = Modifier.height(10.dp))
 
-        // Organization Number
         TextField(
-            value = organizationnumber,
-            onValueChange = { organizationnumber = it },
+            value = organizationNumber,
+            onValueChange = {},
+            enabled = false,
             label = { Text("Organization Number") },
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(vertical = 6.dp),
             colors = OutlinedTextFieldDefaults.colors(
-                focusedBorderColor = Color(0xFF4796B6),
-                unfocusedBorderColor = Color.LightGray,
-                cursorColor = Color(0xFF446E84)
+                disabledTextColor = Color.Black,
+                disabledBorderColor = Color.LightGray
             )
         )
 
-        Spacer(modifier = Modifier.height(10.dp))
-
-        // Email Field
         TextField(
             value = email,
-            onValueChange = { email = it },
+            onValueChange = {},
+            enabled = false,
             label = { Text("Email") },
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(vertical = 6.dp),
             colors = OutlinedTextFieldDefaults.colors(
-                focusedBorderColor = Color(0xFF4796B6),
-                unfocusedBorderColor = Color.LightGray,
-                cursorColor = Color(0xFF446E84)
+                disabledTextColor = Color.Black,
+                disabledBorderColor = Color.LightGray
             )
         )
 
-        Spacer(modifier = Modifier.height(10.dp))
-
-        // Phone Field
-        TextField(
-            value = phonenumber,
-            onValueChange = { phonenumber = it },
-            label = { Text("Phone") },
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(vertical = 6.dp),
-            colors = OutlinedTextFieldDefaults.colors(
-                focusedBorderColor = Color(0xFF4796B6),
-                unfocusedBorderColor = Color.LightGray,
-                cursorColor = Color(0xFF446E84)
-            )
-        )
         Spacer(modifier = Modifier.height(20.dp))
 
-        // Save Button
         Button(
             onClick = {
                 coroutineScope.launch {
@@ -243,11 +195,6 @@ fun ProfileScreen() {
                 fontSize = 18.sp
             )
         }
-
-        if (saveMessage.isNotEmpty()) {
-            Spacer(modifier = Modifier.height(10.dp))
-            Text(text = saveMessage)
-        }
     }
 }
 
@@ -256,3 +203,4 @@ fun ProfileScreen() {
 fun ProfileScreenPreview() {
     ProfileScreen()
 }
+
