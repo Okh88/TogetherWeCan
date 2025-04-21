@@ -1,11 +1,11 @@
 package com.example.togetherwecan
 
 import android.net.Uri
+import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -16,6 +16,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -27,11 +28,7 @@ import com.google.firebase.ktx.Firebase
 import com.google.firebase.storage.ktx.storage
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
-import java.util.UUID
-
-
-
-
+import java.util.*
 
 @Composable
 fun ProfileVolunterScreen() {
@@ -40,6 +37,7 @@ fun ProfileVolunterScreen() {
     val currentUser = auth.currentUser
     val database = Firebase.database.reference
     val storage = Firebase.storage
+    val context = LocalContext.current
 
     var fullname by remember { mutableStateOf("") }
     var email by remember { mutableStateOf("") }
@@ -48,47 +46,64 @@ fun ProfileVolunterScreen() {
     var selectedImageUri by remember { mutableStateOf<Uri?>(null) }
 
     var isSaving by remember { mutableStateOf(false) }
-    var saveMessage by remember { mutableStateOf("") }
     val coroutineScope = rememberCoroutineScope()
 
-    // Function to load user data from Firebase
-    suspend fun loadUserData() {
-        try {
-            userId?.let { uid ->
-                val personalRef = database.child("users").child(uid).child("personalinfo")
-                val dataSnapshot = personalRef.get().await()
-
-                fullname = dataSnapshot.child("fullname").value.toString()
-                email = dataSnapshot.child("email").value.toString()
-                phonenumber = dataSnapshot.child("phonenumber").value.toString()
-
-                // Load profile image URL if available
-                val imageSnapshot = database.child("users").child(uid).child("image").get().await()
-                imageUrl = imageSnapshot.value.toString()
-            }
-        } catch (e: Exception) {
-            e.printStackTrace()
-            saveMessage = "Error loading user data: ${e.localizedMessage}"
-        }
+    rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.GetContent()
+    ) { uri: Uri? ->
+        selectedImageUri = uri
     }
+
 
     LaunchedEffect(userId) {
         userId?.let { uid ->
             try {
                 val snapshot = database.child("users").child(uid).get().await()
-                val personalInfo = snapshot.child("personalinfo")
-
-                fullname = personalInfo.child("fullname").getValue(String::class.java) ?: ""
-                email = personalInfo.child("email").getValue(String::class.java) ?: ""
-                phonenumber = personalInfo.child("phonenumber").getValue(String::class.java) ?: ""
-
+                fullname = snapshot.child("name").getValue(String::class.java) ?: ""
+                email = snapshot.child("email").getValue(String::class.java) ?: ""
+                phonenumber = snapshot.child("phoneNumber").getValue(String::class.java) ?: ""
                 imageUrl = snapshot.child("image").getValue(String::class.java) ?: ""
             } catch (e: Exception) {
                 e.printStackTrace()
             }
-
         }
-        saveMessage = "Changes saved successfully"
+    }
+
+    suspend fun saveChanges() {
+        isSaving = true
+
+        try {
+            selectedImageUri?.let { uri ->
+                val fileName = UUID.randomUUID().toString()
+                val imageRef = storage.reference.child("profile_images/$userId/$fileName.jpg")
+                imageRef.putFile(uri).await()
+                val downloadUrl = imageRef.downloadUrl.await().toString()
+                userId?.let { uid ->
+                    database.child("users").child(uid).child("image").setValue(downloadUrl).await()
+                    imageUrl = downloadUrl
+                    selectedImageUri = null
+                }
+            }
+
+            userId?.let { uid ->
+                val userRef = database.child("users").child(uid)
+                userRef.child("name").setValue(fullname).await()
+                userRef.child("phoneNumber").setValue(phonenumber).await()
+            }
+
+            val profileUpdates = userProfileChangeRequest {
+                displayName = fullname
+            }
+            currentUser?.updateProfile(profileUpdates)?.await()
+
+            Toast.makeText(context, "Changes saved successfully", Toast.LENGTH_SHORT).show()
+
+        } catch (e: Exception) {
+            e.printStackTrace()
+            Toast.makeText(context, "Error saving changes: ${e.localizedMessage}", Toast.LENGTH_SHORT).show()
+        } finally {
+            isSaving = false
+        }
     }
 
     Column(
@@ -98,41 +113,20 @@ fun ProfileVolunterScreen() {
         verticalArrangement = Arrangement.Top,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        // Header
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.Center, // Center horizontally
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Text(text = "My Profile", fontSize = 30.sp)
-        }
-
+        Text(text = "My Profile", fontSize = 30.sp)
         Spacer(modifier = Modifier.height(20.dp))
 
-        // Profile Picture
-        Box(
-            contentAlignment = Alignment.Center,
+
+        Image(
+            painter = painterResource(id = R.drawable.togetherwecanlogo),
+            contentDescription = "Logo User",
             modifier = Modifier
-                .size(120.dp)
+                .size(90.dp)
                 .clip(CircleShape)
-                .border(2.dp, Color.Gray, CircleShape)
-        ) {
-            Image(
-                painter = if (imageUrl.isNotEmpty()) {
-                    androidx.compose.ui.res.painterResource(id = R.drawable.togetherwecanlogo)
-                } else {
-                    painterResource(id = R.drawable.togetherwecanlogo)
-                },
-                contentDescription = "Logo User",
-                modifier = Modifier
-                    .size(90.dp)
-                    .padding(bottom = 24.dp)
-            )
-        }
+        )
 
         Spacer(modifier = Modifier.height(20.dp))
 
-        // Name Field
         TextField(
             value = fullname,
             onValueChange = { fullname = it },
@@ -147,29 +141,23 @@ fun ProfileVolunterScreen() {
             )
         )
 
-        Spacer(modifier = Modifier.height(10.dp))
-
-        // Email Field
         TextField(
             value = email,
-            onValueChange = { email = it },
+            onValueChange = {},
+            enabled = false,
             label = { Text("Email") },
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(vertical = 6.dp),
             colors = OutlinedTextFieldDefaults.colors(
-                focusedBorderColor = Color(0xFF4796B6),
-                unfocusedBorderColor = Color.LightGray,
-                cursorColor = Color(0xFF446E84)
+                disabledTextColor = Color.Black,
+                disabledBorderColor = Color.LightGray
             )
         )
 
-        Spacer(modifier = Modifier.height(10.dp))
-
-        // Phone Field
         TextField(
             value = phonenumber,
-            onValueChange = { phonenumber = it },
+            onValueChange = { phonenumber = it.filter { it.isDigit() } },
             label = { Text("Phone") },
             modifier = Modifier
                 .fillMaxWidth()
@@ -183,7 +171,6 @@ fun ProfileVolunterScreen() {
 
         Spacer(modifier = Modifier.height(20.dp))
 
-        // Save Button
         Button(
             onClick = {
                 coroutineScope.launch {
@@ -209,16 +196,7 @@ fun ProfileVolunterScreen() {
                 fontSize = 18.sp
             )
         }
-
-        if (saveMessage.isNotEmpty()) {
-            Spacer(modifier = Modifier.height(10.dp))
-            Text(text = saveMessage)
-        }
     }
-}
-
-fun saveChanges() {
-    TODO("Not yet implemented")
 }
 
 @Preview(showBackground = true)
@@ -226,3 +204,4 @@ fun saveChanges() {
 fun ProfileVolunterScreenPreview() {
     ProfileVolunterScreen()
 }
+
