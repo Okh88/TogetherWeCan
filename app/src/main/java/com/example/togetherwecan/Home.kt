@@ -27,12 +27,12 @@ data class BottomNavItem(val route: String, val label: String, val icon: android
 
 @Composable
 fun Home(navController: NavController) {
-    // Get current user and check organization status
+
     val auth = FirebaseAuth.getInstance()
     val currentUser = auth.currentUser
     var isOrganization by remember { mutableStateOf<Boolean?>(null) }
 
-    // Fetch organization status from Firebase
+
     LaunchedEffect(currentUser) {
         if (currentUser != null) {
             val userId = currentUser.uid
@@ -43,7 +43,7 @@ fun Home(navController: NavController) {
                     isOrganization = snapshot.getValue(Boolean::class.java) == true
                 }
                 .addOnFailureListener {
-                    // Handle failure
+
                 }
         }
     }
@@ -61,15 +61,15 @@ fun Home(navController: NavController) {
                 startDestination = if (isOrganization == true) "my events" else "myeventsvolunter",
                 modifier = Modifier.padding(innerPadding)
             ) {
-                // For Organization
+
                 if (isOrganization == true) {
                     composable("my events") { MyEvents(navController) }
                     composable("add event") { AddEvent() }
                     composable("profile") { ProfileScreen() }
                 } else {
-                    // For Volunteer (when isOrganization is false)
+
                     composable("myeventsvolunter") { MyEventsVolunterScreen()}
-                    composable("events") { EventsVolunterScreen() }
+                    composable("events") { JoinedEvents() }
                     composable("profilevolunter") { ProfileVolunterScreen() }
                 }
             }
@@ -77,10 +77,6 @@ fun Home(navController: NavController) {
     }
 }
 
-@Composable
-fun EventsVolunterScreen() {
-    TODO("Not yet implemented")
-}
 
 @Composable
 fun BottomNavigationBar(navController: NavController, isOrganization: Boolean) {
@@ -92,8 +88,8 @@ fun BottomNavigationBar(navController: NavController, isOrganization: Boolean) {
         )
     } else {
         listOf(
-            BottomNavItem("myeventsvolunter", "My Events", Icons.Filled.Folder),
-            BottomNavItem("events", "Join Now", Icons.Filled.Folder),
+            BottomNavItem("myeventsvolunter", "Events", Icons.Filled.Folder),
+            BottomNavItem("events", "Joined Events", Icons.Filled.Folder),
             BottomNavItem("profilevolunter", "Profile", Icons.Filled.AccountCircle)
         )
     }
