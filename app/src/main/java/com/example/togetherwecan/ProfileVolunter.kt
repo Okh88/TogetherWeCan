@@ -29,6 +29,10 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
 import java.util.UUID
 
+
+
+
+
 @Composable
 fun ProfileVolunterScreen() {
     val auth = FirebaseAuth.getInstance()
@@ -47,68 +51,44 @@ fun ProfileVolunterScreen() {
     var saveMessage by remember { mutableStateOf("") }
     val coroutineScope = rememberCoroutineScope()
 
-    val imagePicker = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.GetContent()
-    ) { uri: Uri? ->
-        selectedImageUri = uri
+    // Function to load user data from Firebase
+    suspend fun loadUserData() {
+        try {
+            userId?.let { uid ->
+                val personalRef = database.child("users").child(uid).child("personalinfo")
+                val dataSnapshot = personalRef.get().await()
+
+                fullname = dataSnapshot.child("fullname").value.toString()
+                email = dataSnapshot.child("email").value.toString()
+                phonenumber = dataSnapshot.child("phonenumber").value.toString()
+
+                // Load profile image URL if available
+                val imageSnapshot = database.child("users").child(uid).child("image").get().await()
+                imageUrl = imageSnapshot.value.toString()
+            }
+        } catch (e: Exception) {
+            e.printStackTrace()
+            saveMessage = "Error loading user data: ${e.localizedMessage}"
+        }
     }
 
-    // Fetch existing data from Firebase
     LaunchedEffect(userId) {
         userId?.let { uid ->
             try {
                 val snapshot = database.child("users").child(uid).get().await()
-                snapshot.child("personalinfo").let { personal ->
-                    fullname = personal.child("fullname").getValue(String::class.java) ?: ""
-                    email = personal.child("email").getValue(String::class.java) ?: ""
-                    phonenumber = personal.child("phonenumber").getValue(String::class.java) ?: ""
-                }
+                val personalInfo = snapshot.child("personalinfo")
+
+                fullname = personalInfo.child("fullname").getValue(String::class.java) ?: ""
+                email = personalInfo.child("email").getValue(String::class.java) ?: ""
+                phonenumber = personalInfo.child("phonenumber").getValue(String::class.java) ?: ""
+
                 imageUrl = snapshot.child("image").getValue(String::class.java) ?: ""
             } catch (e: Exception) {
                 e.printStackTrace()
             }
+
         }
-    }
-
-    suspend fun saveChanges() {
-        isSaving = true
-        saveMessage = ""
-
-        try {
-            // Upload new image if selected
-            selectedImageUri?.let { uri ->
-                val fileName = UUID.randomUUID().toString()
-                val imageRef = storage.reference.child("profile_images/$userId/$fileName.jpg")
-                imageRef.putFile(uri).await()
-                val downloadUrl = imageRef.downloadUrl.await().toString()
-                userId?.let { uid ->
-                    database.child("users").child(uid).child("image").setValue(downloadUrl).await()
-                    imageUrl = downloadUrl
-                    selectedImageUri = null
-                }
-            }
-
-            // Save other personal details
-            userId?.let { uid ->
-                val personalRef = database.child("users").child(uid).child("personalinfo")
-                personalRef.child("fullname").setValue(fullname).await()
-                personalRef.child("email").setValue(email).await()
-                personalRef.child("phonenumber").setValue(phonenumber).await()
-            }
-
-            currentUser?.updateEmail(email)?.await()
-            val profileUpdates = userProfileChangeRequest {
-                displayName = fullname
-            }
-            currentUser?.updateProfile(profileUpdates)?.await()
-
-            saveMessage = "Changes saved successfully"
-        } catch (e: Exception) {
-            e.printStackTrace()
-            saveMessage = "Error saving changes: ${e.localizedMessage}"
-        } finally {
-            isSaving = false
-        }
+        saveMessage = "Changes saved successfully"
     }
 
     Column(
@@ -138,7 +118,11 @@ fun ProfileVolunterScreen() {
                 .border(2.dp, Color.Gray, CircleShape)
         ) {
             Image(
-                painter = painterResource(id = R.drawable.togetherwecanlogo),
+                painter = if (imageUrl.isNotEmpty()) {
+                    androidx.compose.ui.res.painterResource(id = R.drawable.togetherwecanlogo)
+                } else {
+                    painterResource(id = R.drawable.togetherwecanlogo)
+                },
                 contentDescription = "Logo User",
                 modifier = Modifier
                     .size(90.dp)
@@ -177,7 +161,8 @@ fun ProfileVolunterScreen() {
                 focusedBorderColor = Color(0xFF4796B6),
                 unfocusedBorderColor = Color.LightGray,
                 cursorColor = Color(0xFF446E84)
-            )        )
+            )
+        )
 
         Spacer(modifier = Modifier.height(10.dp))
 
@@ -193,7 +178,9 @@ fun ProfileVolunterScreen() {
                 focusedBorderColor = Color(0xFF4796B6),
                 unfocusedBorderColor = Color.LightGray,
                 cursorColor = Color(0xFF446E84)
-            )        )
+            )
+        )
+
         Spacer(modifier = Modifier.height(20.dp))
 
         // Save Button
@@ -230,39 +217,12 @@ fun ProfileVolunterScreen() {
     }
 }
 
+fun saveChanges() {
+    TODO("Not yet implemented")
+}
+
 @Preview(showBackground = true)
 @Composable
 fun ProfileVolunterScreenPreview() {
     ProfileVolunterScreen()
 }
-
-/*
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
-
-@Composable
-fun ProfileVolunterScreen() {
-    Column(
-        modifier = Modifier.fillMaxSize().padding(20.dp),
-        verticalArrangement = Arrangement.Center,
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        Text(text = "ProfileVolunter", fontSize = 24.sp)
-    }
-}
-
- */
-
-
-
-
-
-

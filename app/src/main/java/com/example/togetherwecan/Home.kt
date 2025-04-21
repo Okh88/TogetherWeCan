@@ -78,6 +78,11 @@ fun Home(navController: NavController) {
 }
 
 @Composable
+fun EventsVolunterScreen() {
+    TODO("Not yet implemented")
+}
+
+@Composable
 fun BottomNavigationBar(navController: NavController, isOrganization: Boolean) {
     val items = if (isOrganization) {
         listOf(
