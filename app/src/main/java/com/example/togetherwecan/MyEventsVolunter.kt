@@ -1,28 +1,45 @@
 package com.example.togetherwecan
 
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.material3.*
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.NavController
 
 @Composable
-fun MyEventsVolunterScreen(viewModel: EventsViewModel = viewModel()) {
+fun MyEventsVolunterScreen(navController: NavController) {
+
+    val viewModel: EventsViewModel = viewModel()
     Column(modifier = Modifier.fillMaxSize()) {
-        // Header
+
         Box(
             modifier = Modifier
                 .fillMaxWidth()
@@ -44,14 +61,7 @@ fun MyEventsVolunterScreen(viewModel: EventsViewModel = viewModel()) {
                                 .clip(CircleShape)
                         )
                         Spacer(modifier = Modifier.width(8.dp))
-                        Text("Name Lastname", color = Color.White, fontWeight = FontWeight.Bold)
-                    }
-                    Button(
-                        onClick = { /* Logout logic */ },
-                        colors = ButtonDefaults.buttonColors(Color.Transparent),
-                        border = BorderStroke(1.dp, Color.White)
-                    ) {
-                        Text("Log Out", color = Color.White)
+
                     }
                 }
 
@@ -61,17 +71,11 @@ fun MyEventsVolunterScreen(viewModel: EventsViewModel = viewModel()) {
                 Text("Welcome!", fontSize = 20.sp, color = Color.White)
                 Text("Find volunteer opportunities near you and help those in need.", color = Color.White)
                 Spacer(modifier = Modifier.height(16.dp))
-                Button(
-                    onClick = { },
-                    modifier = Modifier.align(Alignment.CenterHorizontally),
-                    colors = ButtonDefaults.buttonColors(Color(0xFFA0CBE8))
-                ) {
-                    Text("Join Now", color = Color.White)
-                }
+
             }
         }
 
-        // Event List
+
         Column(modifier = Modifier.padding(16.dp)) {
             Text("Organizations", fontSize = 20.sp, fontWeight = FontWeight.Bold)
 
@@ -94,12 +98,28 @@ fun MyEventsVolunterScreen(viewModel: EventsViewModel = viewModel()) {
                             Text(event.eventDescription, fontSize = 14.sp)
 
                             Spacer(modifier = Modifier.height(8.dp))
-                            Button(
-                                onClick = { /*JoinNow*/ },
-                                colors = ButtonDefaults.buttonColors(Color(0xFF426175))
+                            Box(
+                                modifier = Modifier
+                                    .background(
+                                        brush = Brush.horizontalGradient(
+                                            colors = listOf(Color(0xFF89CFF0), Color(0xFF2F4F4F))
+                                        ),
+                                        shape = RoundedCornerShape(50)
+                                    )
+                                    .padding(horizontal = 24.dp, vertical = 8.dp)
+                                    .clickable {
+                                        navController.navigate("eventdetailsvolunter/${event.orgId}/${event.id}")
+                                    }
+
                             ) {
-                                Text("Join Now", color = Color.White)
+                                Text(
+                                    text = "Open and Join Now",
+                                    color = Color.White,
+                                    fontSize = 14.sp
+                                )
                             }
+
+
                         }
                     }
                 }

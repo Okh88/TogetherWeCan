@@ -43,9 +43,12 @@ fun AppNavigator() {
         composable("signupvolunter") { SignUpVolunterScreen(navController) }
         composable("home") { Home(navController) }
         composable("eventdetails/{orgId}/{eventId}") { backStackEntry ->
-            EventDetails(navController = navController, navBackStackEntry = backStackEntry)
+            EventDetails(navController = navController, navBackStackEntry = backStackEntry) }
+        composable("eventdetailsvolunter/{orgId}/{eventId}") { backStackEntry ->
+            val orgId = backStackEntry.arguments?.getString("orgId") ?: ""
+            val eventId = backStackEntry.arguments?.getString("eventId") ?: ""
+            EventDetailsVolunter(navController, orgId, eventId)
         }
-
 
     }
 }

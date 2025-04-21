@@ -58,7 +58,7 @@ fun Home(navController: NavController) {
         ) { innerPadding ->
             NavHost(
                 navController = tabNavController,
-                startDestination = if (isOrganization == true) "my events" else "myeventsvolunter",
+                startDestination = if (isOrganization == true) "my events" else "eventsvolunter",
                 modifier = Modifier.padding(innerPadding)
             ) {
 
@@ -68,7 +68,7 @@ fun Home(navController: NavController) {
                     composable("profile") { ProfileScreen() }
                 } else {
 
-                    composable("myeventsvolunter") { MyEventsVolunterScreen()}
+                    composable("eventsvolunter") { MyEventsVolunterScreen(navController)}
                     composable("events") { JoinedEvents() }
                     composable("profilevolunter") { ProfileVolunterScreen() }
                 }
@@ -88,7 +88,7 @@ fun BottomNavigationBar(navController: NavController, isOrganization: Boolean) {
         )
     } else {
         listOf(
-            BottomNavItem("myeventsvolunter", "Events", Icons.Filled.Folder),
+            BottomNavItem("eventsvolunter", "Events", Icons.Filled.Folder),
             BottomNavItem("events", "Joined Events", Icons.Filled.Folder),
             BottomNavItem("profilevolunter", "Profile", Icons.Filled.AccountCircle)
         )

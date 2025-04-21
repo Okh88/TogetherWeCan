@@ -1,8 +1,6 @@
 package com.example.togetherwecan
 
-import androidx.compose.runtime.Composable
 import androidx.compose.runtime.mutableStateListOf
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.lifecycle.ViewModel
 import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
@@ -10,11 +8,22 @@ import com.google.firebase.database.ValueEventListener
 import com.google.firebase.database.ktx.database
 import com.google.firebase.ktx.Firebase
 
+data class VolunteerDetailEvent(
+    val id: String = "",
+    val orgId: String = "",
+    val eventTitle: String = "",
+    val eventAddress: String = "",
+    val eventStartDate: String = "",
+    val eventEndDate: String = "",
+    val eventType: String = "",
+    val eventDescription: String = ""
+)
+
 class EventsViewModel : ViewModel() {
     private val db = Firebase.database.reference
 
-    private val _events = mutableStateListOf<VolunteerEvent>()
-    val events: List<VolunteerEvent> = _events
+    private val _events = mutableStateListOf<VolunteerDetailEvent>()
+    val events: List<VolunteerDetailEvent> = _events
 
     init {
         fetchEvents()
@@ -26,6 +35,7 @@ class EventsViewModel : ViewModel() {
                 _events.clear()
 
                 for (userSnapshot in snapshot.children) {
+                    val orgId = userSnapshot.key ?: ""
                     for (eventSnapshot in userSnapshot.children) {
                         val id = eventSnapshot.key ?: ""
                         val eventTitle = eventSnapshot.child("eventTitle").getValue(String::class.java) ?: ""
@@ -35,8 +45,9 @@ class EventsViewModel : ViewModel() {
                         val eventType = eventSnapshot.child("eventType").getValue(String::class.java) ?: ""
                         val eventDescription = eventSnapshot.child("eventDescription").getValue(String::class.java) ?: ""
 
-                        val event = VolunteerEvent(
+                        val event = VolunteerDetailEvent(
                             id = id,
+                            orgId = orgId,
                             eventTitle = eventTitle,
                             eventAddress = eventAddress,
                             eventStartDate = eventStartDate,
@@ -54,16 +65,4 @@ class EventsViewModel : ViewModel() {
             }
         })
     }
-}
-
-@Preview (showBackground = true)
-@Composable
-fun EventsScreenPreview() {
-    val viewModel = EventsViewModel()
-    EventsScreen(viewModel)
-}
-
-@Composable
-fun EventsScreen(viewModel: EventsViewModel) {
-    TODO("Not yet implemented")
 }
