@@ -57,7 +57,7 @@ fun MyEventsVolunterScreen(navController: NavController) {
                             painter = painterResource(R.drawable.togetherwecanlogo),
                             contentDescription = "User",
                             modifier = Modifier
-                                .size(48.dp)
+                                .size(68.dp)
                                 .clip(CircleShape)
                         )
                         Spacer(modifier = Modifier.width(8.dp))
