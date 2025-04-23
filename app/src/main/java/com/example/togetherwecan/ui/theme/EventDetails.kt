@@ -10,13 +10,17 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material3.Button
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -40,14 +44,18 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavBackStackEntry
 import androidx.navigation.NavController
-import com.example.togetherwecan.Events
-import com.example.togetherwecan.TopAppBar
 import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.FirebaseDatabase
 import com.google.firebase.database.ValueEventListener
-import com.google.firebase.ktx.Firebase
 import java.util.Calendar
+
+data class volunter(
+    val name : String? = null,
+    val email : String? = null,
+    val organization : Boolean? = null,
+    val organizationNumber : String? = null,
+)
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -64,6 +72,8 @@ fun EventDetails(navController: NavController, navBackStackEntry: NavBackStackEn
     var selectedEndDate by remember { mutableStateOf("") }
     var expanded by remember { mutableStateOf(false) }
     var madeChange by remember { mutableStateOf(false) }
+    val volunteerList = remember {mutableListOf<volunter>()}
+
     val context = LocalContext.current
     val calendar = Calendar.getInstance()
     val year = calendar.get(Calendar.YEAR)
@@ -109,7 +119,7 @@ fun EventDetails(navController: NavController, navBackStackEntry: NavBackStackEn
     )
     val database: FirebaseDatabase = FirebaseDatabase.getInstance()
     val singleEventsRef = database.getReference("Events").child("$orgId").child("$eventId")
-
+    val volunterRef = database.getReference("JoinedVolunter")
 
     LaunchedEffect(Unit) {
         singleEventsRef.addListenerForSingleValueEvent(object : ValueEventListener {
@@ -131,6 +141,48 @@ fun EventDetails(navController: NavController, navBackStackEntry: NavBackStackEn
             }
         })
     }
+
+
+    LaunchedEffect(Unit) {
+        volunterRef.addListenerForSingleValueEvent(object : ValueEventListener {
+            override fun onDataChange(snapshot: DataSnapshot) {
+                for (childSnapshot in snapshot.children) {
+                    var volunterEventID = childSnapshot.child("eventId").getValue(String::class.java) ?: ""
+                    var volunterUserId = childSnapshot.child("userId").getValue(String::class.java) ?: ""
+
+                    if(volunterEventID == eventId) {
+                        val userRef = database.getReference("users").child("$volunterUserId")
+                        userRef.addListenerForSingleValueEvent(object : ValueEventListener {
+                            override fun onDataChange(snapshot: DataSnapshot) {
+                                var volunterName = snapshot.child("name").getValue(String::class.java) ?: ""
+                                var volunterEmail = snapshot.child("email").getValue(String::class.java) ?: ""
+                                var organization = snapshot.child("organization").getValue(Boolean::class.java)
+                                var organizationNumber = snapshot.child("organizationNumber").getValue(String::class.java) ?: ""
+
+                                var newVolunter = volunter(volunterName, volunterEmail, organization, organizationNumber)
+
+                                volunteerList.add(newVolunter)
+
+
+                            }
+
+                            override fun onCancelled(error: DatabaseError) {
+                                Log.e("MyLogs", "Failed to load user", error.toException())
+                            }
+                        })
+                    }
+
+                    Log.d("MyLogs", " Volunter $volunterEventID")
+                }
+            }
+
+            override fun onCancelled(error: DatabaseError) {
+                Log.e("MyLogs", "Failed to load user", error.toException())
+            }
+        })
+    }
+
+    Log.d("MyLogs", "List $volunteerList")
 
     // Date picker dialog
     val endDatePickerDialog = DatePickerDialog(
@@ -159,7 +211,8 @@ fun EventDetails(navController: NavController, navBackStackEntry: NavBackStackEn
 
     Column(
         modifier = Modifier
-            .padding(20.dp),
+            .padding(20.dp)
+            //.verticalScroll(scrollState),
     ) {
         CenterAlignedTopAppBar(
             title = { Text("Event Description") },
@@ -321,6 +374,78 @@ fun EventDetails(navController: NavController, navBackStackEntry: NavBackStackEn
                 Text("Save Changes")
             }
 
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(20.dp),
+                verticalArrangement = Arrangement.Top,
+                horizontalAlignment = Alignment.Start
+            ) {
+                Text(
+                    text = "Joined Volunteers",
+                    fontSize = 28.sp,
+                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier.padding(bottom = 16.dp)
+                )
+
+                volunteerList.forEach { volunter ->
+                    VolunterCard(volunter)
+                    Spacer(modifier = Modifier.height(16.dp))
+                }
+            }
+
+        }
+
+        Spacer(modifier = Modifier.height(40.dp))
+
+
+    }
+}
+
+
+@Composable
+fun VolunterCard(
+    volunter: volunter
+) {
+
+    Card(
+        modifier = Modifier
+            .fillMaxWidth(),
+        shape = RoundedCornerShape(12.dp),
+        elevation = CardDefaults.cardElevation(8.dp),
+        colors = CardDefaults.cardColors(containerColor = Color(0xFFF9F6F6)),
+    ) {
+        Row(
+            modifier = Modifier
+                .padding(16.dp)
+                .fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Column(
+                modifier = Modifier.weight(1f)
+            ) {
+                Text(
+                    text = volunter.name ?: "Unknown Title",
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 16.sp
+                )
+                Spacer(modifier = Modifier.height(4.dp))
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(
+                        imageVector = Icons.Default.LocationOn,
+                        contentDescription = "Location",
+                        tint = Color.Gray,
+                        modifier = Modifier.size(16.dp)
+                    )
+                    Spacer(modifier = Modifier.width(4.dp))
+                    Text(
+                        text = volunter.email ?: "Unknown email",
+                        color = Color.Gray,
+                        fontSize = 14.sp
+                    )
+                }
+            }
         }
     }
 }
