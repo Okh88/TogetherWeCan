@@ -33,6 +33,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
@@ -108,13 +109,24 @@ fun MyEvents(navController: NavController) {
             modifier = Modifier.padding(bottom = 16.dp)
         )
 
+        Spacer(modifier = Modifier.height(200.dp))
+
+        Column(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalAlignment = Alignment.CenterHorizontally
+        )
+        {
+            Text(
+                text = "No events found, " +
+                        "Create One Now + ",
+            )
+        }
         events.forEach { (orgId, eventId, event) ->
             EventCard(navController, orgId, eventId, event)
             Spacer(modifier = Modifier.height(16.dp))
         }
     }
 }
-
 
 @Composable
 fun EventCard(
@@ -194,3 +206,5 @@ fun EventCard(
         }
     }
 }
+
+
