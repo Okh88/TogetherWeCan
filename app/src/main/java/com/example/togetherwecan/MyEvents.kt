@@ -19,7 +19,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.LocationOn
-import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
@@ -33,7 +32,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
@@ -109,21 +107,19 @@ fun MyEvents(navController: NavController) {
             modifier = Modifier.padding(bottom = 16.dp)
         )
 
-        Spacer(modifier = Modifier.height(200.dp))
 
-        Column(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalAlignment = Alignment.CenterHorizontally
-        )
-        {
+        if (events.isEmpty()) {
             Text(
-                text = "No events found, " +
-                        "Create One Now + ",
+                text = "No events available",
+                fontSize = 16.sp,
+                color = Color.Gray,
+                modifier = Modifier.padding(top = 16.dp)
             )
-        }
-        events.forEach { (orgId, eventId, event) ->
-            EventCard(navController, orgId, eventId, event)
-            Spacer(modifier = Modifier.height(16.dp))
+        } else {
+            events.forEach { (orgId, eventId, event) ->
+                EventCard(navController, orgId, eventId, event)
+                Spacer(modifier = Modifier.height(16.dp))
+            }
         }
     }
 }
@@ -206,5 +202,3 @@ fun EventCard(
         }
     }
 }
-
-
