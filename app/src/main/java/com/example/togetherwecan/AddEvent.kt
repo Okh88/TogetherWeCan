@@ -1,53 +1,26 @@
 package com.example.togetherwecan
 
 import android.app.DatePickerDialog
-import android.util.Log
-import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.Image
+import android.widget.Toast
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.DropdownMenuItem
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.ExposedDropdownMenuBox
-import androidx.compose.material3.ExposedDropdownMenuDefaults
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextField
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
-import androidx.compose.ui.platform.LocalContext
 import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.database.DataSnapshot
-import com.google.firebase.database.DatabaseError
-import com.google.firebase.database.DatabaseReference
-import com.google.firebase.database.FirebaseDatabase
-import com.google.firebase.database.ValueEventListener
-import java.util.Calendar
-import java.util.UUID
-
+import com.google.firebase.database.*
+import java.util.*
+import androidx.compose.ui.tooling.preview.Preview
 
 data class Event(
     val eventTitle: String,
@@ -58,12 +31,10 @@ data class Event(
     val eventEndDate: String
 )
 
-
 @OptIn(ExperimentalMaterial3Api::class)
 @Preview
 @Composable
 fun AddEvent() {
-
     var title by remember { mutableStateOf("") }
     var address by remember { mutableStateOf("") }
     var description by remember { mutableStateOf("") }
@@ -116,234 +87,231 @@ fun AddEvent() {
     val ref = database.reference.child("/Events")
     val firebaseAuth = FirebaseAuth.getInstance()
     val currUser = firebaseAuth.currentUser
-    var orgId: String? = null
-    val userRef = database.getReference("users").child("${currUser?.uid}")
+    var orgId: String? by remember { mutableStateOf(null) }
 
+    val userRef = database.getReference("users").child("${currUser?.uid}")
     userRef.addListenerForSingleValueEvent(object : ValueEventListener {
         override fun onDataChange(snapshot: DataSnapshot) {
             orgId = snapshot.child("organizationNumber").getValue(String::class.java)
-
         }
 
-        override fun onCancelled(error: DatabaseError) {
-            Log.e("FirebaseData", "Failed to read value.", error.toException())
-        }
+        override fun onCancelled(error: DatabaseError) {}
     })
-
-    Log.d("Test", "${currUser?.uid}")
-
-
 
     var selectedStartDate by remember { mutableStateOf("") }
     var selectedEndDate by remember { mutableStateOf("") }
 
-
-    // Date picker dialog
     val endDatePickerDialog = DatePickerDialog(
         context,
         { _, selectedYear, selectedMonth, selectedDay ->
             selectedEndDate = "$selectedDay/${selectedMonth + 1}/$selectedYear"
-        },
-        year, month, day
+        }, year, month, day
     )
-
 
     val startDatePickerDialog = DatePickerDialog(
         context,
         { _, selectedYear, selectedMonth, selectedDay ->
             selectedStartDate = "$selectedDay/${selectedMonth + 1}/$selectedYear"
-
-            // After selecting the start date, set the minDate for the end date picker
             val startDateCalendar = Calendar.getInstance()
             startDateCalendar.set(selectedYear, selectedMonth, selectedDay)
-
-            // Set the minimum date for the end date picker
             endDatePickerDialog.datePicker.minDate = startDateCalendar.timeInMillis
-        },
-        year, month, day
+        }, year, month, day
     )
-
-    startDatePickerDialog.datePicker.minDate = System.currentTimeMillis() // Disable past dates
-
+    startDatePickerDialog.datePicker.minDate = System.currentTimeMillis()
 
     Column(
         modifier = Modifier
             .fillMaxSize()
             .verticalScroll(scrollState)
-            .background(Color.White),
-        //verticalArrangement = Arrangement.SpaceBetween,
+            .padding(20.dp),
+        verticalArrangement = Arrangement.Top,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Text("Add New Event",
-            fontSize = 24.sp,
+        Text(
+            text = "Add New Event",
+            fontSize = 26.sp,
             fontWeight = FontWeight.Bold,
-            color = Color.Black,
+            color = Color(0xFF446E84),
+            modifier = Modifier.padding(10.dp)
+        )
+
+        Spacer(modifier = Modifier.height(20.dp))
+
+
+        OutlinedTextField(
+            value = title,
+            onValueChange = { title = it },
+            label = { Text("Event Title") },
+            shape = RoundedCornerShape(30.dp),
             modifier = Modifier
-                .padding(10.dp)
+                .fillMaxWidth()
+                .padding(vertical = 6.dp),
+            colors = OutlinedTextFieldDefaults.colors(
+                focusedBorderColor = Color(0xFF4796B6),
+                unfocusedBorderColor = Color.LightGray,
+                cursorColor = Color(0xFF446E84)
+            )
+        )
+
+
+        ExposedDropdownMenuBox(
+            expanded = expanded,
+            onExpandedChange = { expanded = !expanded },
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            OutlinedTextField(
+                value = selectedType,
+                onValueChange = {},
+                readOnly = true,
+                label = { Text("Type of Event") },
+                trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
+                shape = RoundedCornerShape(30.dp),
+                modifier = Modifier
+                    .menuAnchor()
+                    .fillMaxWidth()
+                    .padding(vertical = 6.dp),
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedBorderColor = Color(0xFF4796B6),
+                    unfocusedBorderColor = Color.LightGray,
+                    cursorColor = Color(0xFF446E84)
+                )
             )
 
-        Spacer(modifier = Modifier.height(40.dp))
+            ExposedDropdownMenu(
+                expanded = expanded,
+                onDismissRequest = { expanded = false }
+            ) {
+                options.forEach { option ->
+                    DropdownMenuItem(
+                        text = { Text(option) },
+                        onClick = {
+                            selectedType = option
+                            expanded = false
+                        }
+                    )
+                }
+            }
+        }
 
 
-        Column(
+        OutlinedTextField(
+            value = address,
+            onValueChange = { address = it },
+            label = { Text("Event Address") },
+            shape = RoundedCornerShape(30.dp),
             modifier = Modifier
-                .width(300.dp),
-            verticalArrangement = Arrangement.SpaceBetween,
-            horizontalAlignment = Alignment.CenterHorizontally
+                .fillMaxWidth()
+                .padding(vertical = 6.dp),
+            colors = OutlinedTextFieldDefaults.colors(
+                focusedBorderColor = Color(0xFF4796B6),
+                unfocusedBorderColor = Color.LightGray,
+                cursorColor = Color(0xFF446E84)
+            )
+        )
+
+
+        OutlinedTextField(
+            value = description,
+            onValueChange = { description = it },
+            label = { Text("Event Description") },
+            shape = RoundedCornerShape(30.dp),
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(150.dp)
+                .padding(vertical = 6.dp),
+            colors = OutlinedTextFieldDefaults.colors(
+                focusedBorderColor = Color(0xFF4796B6),
+                unfocusedBorderColor = Color.LightGray,
+                cursorColor = Color(0xFF446E84)
+            )
+        )
+
+        Spacer(modifier = Modifier.height(20.dp))
+
+
+        Button(
+            onClick = { startDatePickerDialog.show() },
+            colors = ButtonDefaults.buttonColors(
+                containerColor = Color(0xFF4796B6)
+            ),
+            shape = RoundedCornerShape(30.dp),
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(vertical = 6.dp)
         ) {
             Text(
-                "Title:",
-                modifier = Modifier.align(Alignment.Start)
+                text = if (selectedStartDate.isNotEmpty()) selectedStartDate else "Pick Start Date",
+                color = Color.White
             )
-            TextField(
-                value = title,
-                onValueChange = { newText -> title = newText},
-                label = { Text("Enter Event Title") },
-                modifier = Modifier.fillMaxWidth(),
-                singleLine = true
-            )
-
-            Spacer(modifier = Modifier.height(20.dp))
-
-            ExposedDropdownMenuBox(
-                expanded = expanded,
-                onExpandedChange = { expanded = !expanded }
-            ) {
-                TextField(
-                    value = selectedType,
-                    onValueChange = {},
-                    readOnly = true,
-                    label = { Text("Type of Event") },
-                    trailingIcon = {
-                        ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded)
-                    },
-                    modifier = Modifier
-                        .menuAnchor()
-                        .fillMaxWidth()
-                )
-
-                ExposedDropdownMenu(
-                    expanded = expanded,
-                    onDismissRequest = { expanded = false }
-                ) {
-                    options.forEach { option ->
-                        DropdownMenuItem(
-                            text = { Text(option) },
-                            onClick = {
-                                selectedType = option
-                                expanded = false
-                            }
-                        )
-                    }
-                }
-            }
-
-            Spacer(modifier = Modifier.height(20.dp))
-
-            TextField(
-                value = address,
-                onValueChange = { newText -> address = newText },  // Correct way to update state
-                label = { Text("Enter Event Adress") },
-                modifier = Modifier.fillMaxWidth(),
-                singleLine = true
-            )
-
-            Spacer(modifier = Modifier.height(20.dp))
-
-            TextField(
-                value = description,
-                onValueChange = { newText -> description = newText },  // Correct way to update state
-                label = { Text("Event description") },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(150.dp),
-                singleLine = false,
-            )
-
-            Spacer(modifier = Modifier.height(20.dp))
-
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(vertical = 8.dp),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(20.dp)
-            ) {
-                Text(
-                    text = "Start Date",
-                    modifier = Modifier
-                        .width(90.dp)
-                )
-
-                Button(
-                    onClick = { startDatePickerDialog.show() },
-                ) {
-                    Text(text = if (selectedStartDate.isNotEmpty()) "$selectedStartDate" else "Pick Date")
-                }
-            }
-
-            Spacer(modifier = Modifier.height(20.dp))
-
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(vertical = 8.dp),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(20.dp)
-            ) {
-                Text(
-                    text = "End Date",
-                    modifier = Modifier
-                        .width(90.dp)
-                )
-
-                Button(
-                    onClick = { endDatePickerDialog.show() },
-                ) {
-                    Text(text = if (selectedEndDate.isNotEmpty()) "$selectedEndDate" else "Pick Date")
-                }
-            }
-
         }
+
+
+        Button(
+            onClick = { endDatePickerDialog.show() },
+            colors = ButtonDefaults.buttonColors(
+                containerColor = Color(0xFF4796B6)
+            ),
+            shape = RoundedCornerShape(30.dp),
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(vertical = 6.dp)
+        ) {
+            Text(
+                text = if (selectedEndDate.isNotEmpty()) selectedEndDate else "Pick End Date",
+                color = Color.White
+            )
+        }
+
+        Spacer(modifier = Modifier.height(30.dp))
+
 
         Button(
             onClick = {
-                val event = Event(
-                    eventTitle = title,
-                    eventType = selectedType,
-                    eventAddress = address,
-                    eventDescription = description,
-                    eventStartDate = selectedStartDate,
-                    eventEndDate = selectedEndDate
-                )
+                if (title.isBlank() || selectedType.isBlank() || address.isBlank() || description.isBlank() || selectedStartDate.isBlank() || selectedEndDate.isBlank()) {
+                    Toast.makeText(context, "Please fill in all fields!", Toast.LENGTH_SHORT).show()
+                } else {
+                    val event = Event(
+                        eventTitle = title,
+                        eventType = selectedType,
+                        eventAddress = address,
+                        eventDescription = description,
+                        eventStartDate = selectedStartDate,
+                        eventEndDate = selectedEndDate
+                    )
 
-                if(orgId != null) {
-                    val eventsRef = ref.child("$orgId").child(UUID.randomUUID().toString())
+                    if (orgId != null) {
+                        val eventsRef = ref.child("$orgId").child(UUID.randomUUID().toString())
+                        eventsRef.setValue(event)
+                            .addOnSuccessListener {
+                                Toast.makeText(context, "Event added successfully!", Toast.LENGTH_SHORT).show()
+                            }
+                            .addOnFailureListener {
+                                Toast.makeText(context, "Failed to add event.", Toast.LENGTH_SHORT).show()
+                            }
+                    }
 
-                    eventsRef.setValue(event)
-                        .addOnSuccessListener {
-                            println("Event added successfully!")
-                        }
-                        .addOnFailureListener { exception ->
-                            println("Failed to add event: ${exception.message}")
-                        }
-                } //else show a failure toast
 
-                title = ""
-                selectedType = ""
-                address = ""
-                description = ""
-                selectedStartDate = ""
-                selectedEndDate = ""
-
-                Log.d("Test", "$title $selectedType $address")
+                    title = ""
+                    selectedType = ""
+                    address = ""
+                    description = ""
+                    selectedStartDate = ""
+                    selectedEndDate = ""
+                }
             },
             modifier = Modifier
-                .padding(50.dp)
-                .width(150.dp)
+                .fillMaxWidth(0.65f)
+                .height(50.dp)
+                .background(
+                    brush = Brush.horizontalGradient(
+                        colors = listOf(Color(0xFF97D0E8), Color(0xFF4796B6), Color(0xFF446E84))
+                    ),
+                    shape = RoundedCornerShape(50)
+                ),
+            shape = RoundedCornerShape(50),
+            colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent)
         ) {
-            Text("Save")
+            Text("Save Event", color = Color.White, fontSize = 16.sp)
         }
-
     }
 }
