@@ -25,6 +25,7 @@ import com.google.firebase.database.ValueEventListener
 import com.google.firebase.database.ktx.database
 import com.google.firebase.ktx.Firebase
 import java.util.*
+import java.text.SimpleDateFormat
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -37,7 +38,7 @@ fun EventDetailsVolunter(navController: NavController, orgId: String, eventId: S
     val currentUserId = Firebase.auth.currentUser?.uid
     val hasJoined = remember { mutableStateOf(false) }
     val joinedId = remember { mutableStateOf<String?>(null) }
-
+    val isEventExpired = remember { mutableStateOf(false) }
 
     LaunchedEffect(Unit) {
         val db = Firebase.database.reference
@@ -54,12 +55,17 @@ fun EventDetailsVolunter(navController: NavController, orgId: String, eventId: S
             )
 
             eventState.value = event
+
+            // Check if event is expired
+            val currentDate = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Date())
+            if (event.eventEndDate < currentDate) {
+                isEventExpired.value = true
+            }
         }
     }
 
-
     LaunchedEffect(currentUserId, eventId) {
-        if (currentUserId != null) {
+        if (currentUserId != null && !isEventExpired.value) {
             val ref = Firebase.database.reference.child("JoinedVolunter")
             ref.orderByChild("userId").equalTo(currentUserId)
                 .addListenerForSingleValueEvent(object : ValueEventListener {
@@ -118,7 +124,6 @@ fun EventDetailsVolunter(navController: NavController, orgId: String, eventId: S
                         }
                     }
 
-
                     Card(
                         modifier = Modifier
                             .fillMaxWidth()
@@ -136,7 +141,6 @@ fun EventDetailsVolunter(navController: NavController, orgId: String, eventId: S
                         }
                     }
 
-
                     Card(
                         modifier = Modifier
                             .fillMaxWidth()
@@ -152,7 +156,6 @@ fun EventDetailsVolunter(navController: NavController, orgId: String, eventId: S
                         }
                     }
 
-
                     Spacer(modifier = Modifier.height(12.dp))
                     Text(
                         text = "Be the change you wish to see — join this event and help others in need!",
@@ -162,56 +165,64 @@ fun EventDetailsVolunter(navController: NavController, orgId: String, eventId: S
                         modifier = Modifier.padding(bottom = 12.dp)
                     )
 
+                    if (isEventExpired.value) {
+                        Text(
+                            text = "This event has already ended.",
+                            fontSize = 16.sp,
+                            color = Color.Gray,
+                            modifier = Modifier.padding(8.dp)
+                        )
+                    } else {
+                        if (hasJoined.value) {
+                            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                Text(
+                                    text = "You have already joined this event.",
+                                    fontSize = 16.sp,
+                                    color = Color.Gray,
+                                    modifier = Modifier.padding(8.dp)
+                                )
 
-                    if (hasJoined.value) {
-                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                            Text(
-                                text = "You have already joined this event.",
-                                fontSize = 16.sp,
-                                color = Color.Gray,
-                                modifier = Modifier.padding(8.dp)
-                            )
-
+                                Box(
+                                    modifier = Modifier
+                                        .background(
+                                            brush = Brush.horizontalGradient(
+                                                colors = listOf(Color(0xFFFF6F61), Color(0xFF8B0000))
+                                            ),
+                                            shape = RoundedCornerShape(50)
+                                        )
+                                        .clickable {
+                                            showLeaveDialog.value = true
+                                        }
+                                        .padding(horizontal = 24.dp, vertical = 12.dp)
+                                ) {
+                                    Text(
+                                        text = "Leave Event",
+                                        color = Color.White,
+                                        fontSize = 16.sp
+                                    )
+                                }
+                            }
+                        } else {
                             Box(
                                 modifier = Modifier
+                                    .align(Alignment.CenterHorizontally)
                                     .background(
                                         brush = Brush.horizontalGradient(
-                                            colors = listOf(Color(0xFFFF6F61), Color(0xFF8B0000))
+                                            colors = listOf(Color(0xFF89CFF0), Color(0xFF2F4F4F))
                                         ),
                                         shape = RoundedCornerShape(50)
                                     )
                                     .clickable {
-                                        showLeaveDialog.value = true
+                                        showJoinDialog.value = true
                                     }
                                     .padding(horizontal = 24.dp, vertical = 12.dp)
                             ) {
                                 Text(
-                                    text = "Leave Event",
+                                    text = "Join Now",
                                     color = Color.White,
                                     fontSize = 16.sp
                                 )
                             }
-                        }
-                    } else {
-                        Box(
-                            modifier = Modifier
-                                .align(Alignment.CenterHorizontally)
-                                .background(
-                                    brush = Brush.horizontalGradient(
-                                        colors = listOf(Color(0xFF89CFF0), Color(0xFF2F4F4F))
-                                    ),
-                                    shape = RoundedCornerShape(50)
-                                )
-                                .clickable {
-                                    showJoinDialog.value = true
-                                }
-                                .padding(horizontal = 24.dp, vertical = 12.dp)
-                        ) {
-                            Text(
-                                text = "Join Now",
-                                color = Color.White,
-                                fontSize = 16.sp
-                            )
                         }
                     }
                 } else {
