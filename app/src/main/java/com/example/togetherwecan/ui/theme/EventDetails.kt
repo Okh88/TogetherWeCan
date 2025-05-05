@@ -2,6 +2,7 @@ package com.example.togetherwecan.ui.theme
 
 import android.app.DatePickerDialog
 import android.util.Log
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -19,6 +20,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CenterAlignedTopAppBar
@@ -28,6 +30,8 @@ import androidx.compose.material3.ExposedDropdownMenuBox
 import androidx.compose.material3.ExposedDropdownMenuDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
@@ -37,6 +41,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
@@ -239,20 +244,22 @@ fun EventDetails(navController: NavController, navBackStackEntry: NavBackStackEn
             modifier = Modifier.verticalScroll(scrollState),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Text(
-                "Title",
-                modifier = Modifier
-                    .align(Alignment.Start)
-                )
-
-            TextField(
+            OutlinedTextField(
                 value = eventTitle,
-                onValueChange = { newText ->
-                    eventTitle = newText
+                onValueChange = {
+                    eventTitle = it
                     madeChange = true
-                },
-                modifier = Modifier.fillMaxWidth(),
-                singleLine = true
+                                },
+                label = { Text("Event Title") },
+                shape = RoundedCornerShape(30.dp),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 6.dp),
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedBorderColor = Color(0xFF4796B6),
+                    unfocusedBorderColor = Color.LightGray,
+                    cursorColor = Color(0xFF446E84)
+                )
             )
 
             Spacer(modifier = Modifier.height(20.dp))
@@ -261,19 +268,24 @@ fun EventDetails(navController: NavController, navBackStackEntry: NavBackStackEn
                 expanded = expanded,
                 onExpandedChange = { expanded = !expanded }
             ) {
-                TextField(
+                OutlinedTextField(
                     value = eventType,
                     onValueChange = {
                         madeChange = true
                     },
                     readOnly = true,
                     label = { Text("Type of Event") },
-                    trailingIcon = {
-                        ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded)
-                    },
+                    trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
+                    shape = RoundedCornerShape(30.dp),
                     modifier = Modifier
                         .menuAnchor()
                         .fillMaxWidth()
+                        .padding(vertical = 6.dp),
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = Color(0xFF4796B6),
+                        unfocusedBorderColor = Color.LightGray,
+                        cursorColor = Color(0xFF446E84)
+                    )
                 )
 
                 ExposedDropdownMenu(
@@ -295,81 +307,110 @@ fun EventDetails(navController: NavController, navBackStackEntry: NavBackStackEn
 
             Spacer(modifier = Modifier.height(20.dp))
 
-
-            TextField(
+            OutlinedTextField(
                 value = eventAddress,
-                onValueChange = { newText ->
-                    eventAddress = newText
-                    madeChange = true
-                },
-                label = { Text("Enter Event Adress") },
-                modifier = Modifier.fillMaxWidth(),
-                singleLine = true
-            )
-            Spacer(modifier = Modifier.height(20.dp))
-
-            TextField(
-                value = eventDescription,
-                onValueChange = { newText ->
-                    eventDescription = newText
+                onValueChange = {
+                    eventAddress = it
                     madeChange = true
                                 },
-                label = { Text("Event description") },
+                label = { Text("Event Address") },
+                shape = RoundedCornerShape(30.dp),
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(150.dp),
-                singleLine = false,
+                    .padding(vertical = 6.dp),
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedBorderColor = Color(0xFF4796B6),
+                    unfocusedBorderColor = Color.LightGray,
+                    cursorColor = Color(0xFF446E84)
+                )
             )
 
             Spacer(modifier = Modifier.height(20.dp))
 
-            Row(
+            OutlinedTextField(
+                value = eventDescription,
+                onValueChange = {
+                    eventDescription = it
+                    madeChange = true
+                                },
+                label = { Text("Event Description") },
+                shape = RoundedCornerShape(30.dp),
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(vertical = 8.dp),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(20.dp)
+                    .height(150.dp)
+                    .padding(vertical = 6.dp),
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedBorderColor = Color(0xFF4796B6),
+                    unfocusedBorderColor = Color.LightGray,
+                    cursorColor = Color(0xFF446E84)
+                )
+            )
+
+            Spacer(modifier = Modifier.height(20.dp))
+
+            Button(
+                onClick = { startDatePickerDialog.show() },
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = Color(0xFF4796B6)
+                ),
+                shape = RoundedCornerShape(30.dp),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 6.dp)
             ) {
                 Text(
-                    text = "Start Date",
-                    modifier = Modifier
-                        .width(90.dp)
+                    text = if (selectedStartDate.isNotEmpty()) selectedStartDate else "Pick Start Date",
+                    color = Color.White
                 )
+            }
 
-                Button(
-                    onClick = { startDatePickerDialog.show() },
-                ) {
-                    Text(text = if (selectedStartDate.isNotEmpty()) "$selectedStartDate" else "Pick Date")
-                }
+            Button(
+                onClick = { endDatePickerDialog.show() },
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = Color(0xFF4796B6)
+                ),
+                shape = RoundedCornerShape(30.dp),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 6.dp)
+            ) {
+                Text(
+                    text = if (selectedEndDate.isNotEmpty()) selectedEndDate else "Pick End Date",
+                    color = Color.White
+                )
             }
 
             Spacer(modifier = Modifier.height(20.dp))
 
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(vertical = 8.dp),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(20.dp)
-            ) {
-                Text(
-                    text = "End Date",
-                    modifier = Modifier
-                        .width(90.dp)
-                )
-
-                Button(
-                    onClick = { endDatePickerDialog.show() },
-                ) {
-                    Text(text = if (selectedEndDate.isNotEmpty()) "$selectedEndDate" else "Pick Date")
-                }
-            }
-
-            Spacer(modifier = Modifier.height(40.dp))
-
             Button(
-                onClick = {},
-                enabled = madeChange
+                onClick = {
+                    singleEventsRef.updateChildren(
+                        mapOf(
+                            "eventTitle" to eventTitle,
+                            "eventType" to eventType,
+                            "eventDescription" to eventDescription,
+                            "eventAddress" to eventAddress,
+                            "eventStartDate" to selectedStartDate,
+                            "eventEndDate" to selectedEndDate,
+                        )
+                    ).addOnSuccessListener {
+                        Log.d("MyLogs", "Event updated successfully!")
+                    }.addOnFailureListener { error ->
+                        Log.d("MyLogs","Failed to update event: ${error.message}")
+                    }
+                },
+                enabled = madeChange,
+                modifier = Modifier
+                    .fillMaxWidth(0.65f)
+                    .height(50.dp)
+                    .background(
+                        brush = Brush.horizontalGradient(
+                            colors = listOf(Color(0xFF97D0E8), Color(0xFF4796B6), Color(0xFF446E84))
+                        ),
+                        shape = RoundedCornerShape(50)
+                    ),
+                shape = RoundedCornerShape(50),
+                colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent)
             ) {
                 Text("Save Changes")
             }
