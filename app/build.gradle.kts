@@ -10,7 +10,7 @@ android {
     compileSdk = 35
 
     defaultConfig {
-        applicationId = "com.togetherwecan"
+        applicationId = "com.aos.togetherwecan"
         minSdk = 24
         targetSdk = 35
         versionCode = 1
