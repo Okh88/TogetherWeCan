@@ -8,7 +8,7 @@
             <InsightsFilterSettings>
               <option name="connection">
                 <ConnectionSetting>
-                  <option name="appId" value="com.anonymous.FreshAlert" />
+                  <option name="appId" value="com.aos.togetherwecan" />
                 </ConnectionSetting>
               </option>
               <option name="signal" value="SIGNAL_UNSPECIFIED" />
@@ -22,10 +22,10 @@
             <InsightsFilterSettings>
               <option name="connection">
                 <ConnectionSetting>
-                  <option name="appId" value="PLACEHOLDER" />
-                  <option name="mobileSdkAppId" value="" />
-                  <option name="projectId" value="" />
-                  <option name="projectNumber" value="" />
+                  <option name="appId" value="com.aos.togetherwecan" />
+                  <option name="mobileSdkAppId" value="1:505039591645:android:de78dec259514d7953a334" />
+                  <option name="projectId" value="togetherwecan-ec70b" />
+                  <option name="projectNumber" value="505039591645" />
                 </ConnectionSetting>
               </option>
               <option name="signal" value="SIGNAL_UNSPECIFIED" />

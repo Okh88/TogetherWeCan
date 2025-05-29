@@ -49,6 +49,11 @@ fun AppNavigator() {
             val eventId = backStackEntry.arguments?.getString("eventId") ?: ""
             EventDetailsVolunter(navController, orgId, eventId)
         }
+        composable("main") { MainScreen(navController) }
+        composable("profile") { ProfileScreen(navController) }
+
+        composable("main") { MainScreen(navController) }
+        composable("volunteerprofile") { ProfileVolunterScreen(navController) }
 
     }
 }

@@ -21,6 +21,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.navigation.NavController
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.ktx.userProfileChangeRequest
 import com.google.firebase.database.ktx.database
@@ -31,7 +32,7 @@ import kotlinx.coroutines.tasks.await
 import java.util.*
 
 @Composable
-fun ProfileVolunterScreen() {
+fun ProfileVolunterScreen(navController: NavController) {
     val auth = FirebaseAuth.getInstance()
     val userId = auth.currentUser?.uid
     val currentUser = auth.currentUser
@@ -46,6 +47,8 @@ fun ProfileVolunterScreen() {
     var selectedImageUri by remember { mutableStateOf<Uri?>(null) }
 
     var isSaving by remember { mutableStateOf(false) }
+    var showDeleteDialog by remember { mutableStateOf(false) }
+
     val coroutineScope = rememberCoroutineScope()
 
     rememberLauncherForActivityResult(
@@ -71,7 +74,6 @@ fun ProfileVolunterScreen() {
 
     suspend fun saveChanges() {
         isSaving = true
-
         try {
             selectedImageUri?.let { uri ->
                 val fileName = UUID.randomUUID().toString()
@@ -105,6 +107,26 @@ fun ProfileVolunterScreen() {
             isSaving = false
         }
     }
+
+    suspend fun deleteAccount() {
+        try {
+            userId?.let { uid ->
+                database.child("users").child(uid).removeValue().await()
+            }
+            currentUser?.delete()?.await()
+            auth.signOut()
+
+            Toast.makeText(context, "Account deleted", Toast.LENGTH_SHORT).show()
+
+            navController.navigate("main") {
+                popUpTo("volunteerprofile") { inclusive = true }
+            }
+        } catch (e: Exception) {
+            e.printStackTrace()
+            Toast.makeText(context, "Failed to delete account: ${e.localizedMessage}", Toast.LENGTH_SHORT).show()
+        }
+    }
+
 
     Column(
         modifier = Modifier
@@ -196,12 +218,42 @@ fun ProfileVolunterScreen() {
                 fontSize = 18.sp
             )
         }
+        Spacer(modifier = Modifier.height(55.dp))
+        Button(
+            onClick = { showDeleteDialog = true },
+            colors = ButtonDefaults.buttonColors(containerColor = Color.Red),
+            modifier = Modifier
+                .fillMaxWidth(0.65f)
+                .height(50.dp),
+            shape = RoundedCornerShape(50)
+        ) {
+            Text("Delete Account", color = Color.White, fontSize = 18.sp)
+        }
+    }
+
+    if (showDeleteDialog) {
+        AlertDialog(
+            onDismissRequest = { showDeleteDialog = false },
+            title = { Text("Confirm Delete") },
+            text = { Text("Are you sure you want to delete your account? This action cannot be undone.") },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        showDeleteDialog = false
+                        coroutineScope.launch { deleteAccount() }
+                    }
+                ) {
+                    Text("Yes")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showDeleteDialog = false }) {
+                    Text("Cancel")
+                }
+            }
+        )
     }
 }
 
-@Preview(showBackground = true)
-@Composable
-fun ProfileVolunterScreenPreview() {
-    ProfileVolunterScreen()
-}
+
 

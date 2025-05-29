@@ -65,12 +65,12 @@ fun Home(navController: NavController) {
                 if (isOrganization == true) {
                     composable("my events") { MyEvents(navController) }
                     composable("add event") { AddEvent() }
-                    composable("profile") { ProfileScreen() }
+                    composable("profile") { ProfileScreen(navController) }
                 } else {
 
                     composable("eventsvolunter") { MyEventsVolunterScreen(navController)}
                     composable("events") { JoinedEvents() }
-                    composable("profilevolunter") { ProfileVolunterScreen() }
+                    composable("profilevolunter") { ProfileVolunterScreen(navController) }
                 }
             }
         }
