@@ -47,8 +47,6 @@ fun ProfileVolunterScreen(navController: NavController) {
     var selectedImageUri by remember { mutableStateOf<Uri?>(null) }
 
     var isSaving by remember { mutableStateOf(false) }
-    var showDeleteDialog by remember { mutableStateOf(false) }
-
     val coroutineScope = rememberCoroutineScope()
 
     rememberLauncherForActivityResult(
@@ -107,26 +105,6 @@ fun ProfileVolunterScreen(navController: NavController) {
             isSaving = false
         }
     }
-
-    suspend fun deleteAccount() {
-        try {
-            userId?.let { uid ->
-                database.child("users").child(uid).removeValue().await()
-            }
-            currentUser?.delete()?.await()
-            auth.signOut()
-
-            Toast.makeText(context, "Account deleted", Toast.LENGTH_SHORT).show()
-
-            navController.navigate("main") {
-                popUpTo("volunteerprofile") { inclusive = true }
-            }
-        } catch (e: Exception) {
-            e.printStackTrace()
-            Toast.makeText(context, "Failed to delete account: ${e.localizedMessage}", Toast.LENGTH_SHORT).show()
-        }
-    }
-
 
     Column(
         modifier = Modifier
@@ -218,39 +196,12 @@ fun ProfileVolunterScreen(navController: NavController) {
                 fontSize = 18.sp
             )
         }
-        Spacer(modifier = Modifier.height(55.dp))
-        Button(
-            onClick = { showDeleteDialog = true },
-            colors = ButtonDefaults.buttonColors(containerColor = Color.Red),
-            modifier = Modifier
-                .fillMaxWidth(0.65f)
-                .height(50.dp),
-            shape = RoundedCornerShape(50)
-        ) {
-            Text("Delete Account", color = Color.White, fontSize = 18.sp)
-        }
-    }
-
-    if (showDeleteDialog) {
-        AlertDialog(
-            onDismissRequest = { showDeleteDialog = false },
-            title = { Text("Confirm Delete") },
-            text = { Text("Are you sure you want to delete your account? This action cannot be undone.") },
-            confirmButton = {
-                TextButton(
-                    onClick = {
-                        showDeleteDialog = false
-                        coroutineScope.launch { deleteAccount() }
-                    }
-                ) {
-                    Text("Yes")
-                }
-            },
-            dismissButton = {
-                TextButton(onClick = { showDeleteDialog = false }) {
-                    Text("Cancel")
-                }
-            }
+        Spacer(modifier = Modifier.height(65.dp))
+        Text(
+            text = "If you want to delete your account just send email to: " +
+                    "khadrowo@gmail.com",
+            fontSize = 15.sp,
+            color = Color.Red
         )
     }
 }

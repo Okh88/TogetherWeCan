@@ -46,8 +46,6 @@ fun ProfileScreen(navController: NavController) {
 
     var selectedImageUri by remember { mutableStateOf<Uri?>(null) }
     var isSaving by remember { mutableStateOf(false) }
-    var showDeleteDialog by remember { mutableStateOf(false) }
-
     val coroutineScope = rememberCoroutineScope()
 
     rememberLauncherForActivityResult(
@@ -218,42 +216,16 @@ fun ProfileScreen(navController: NavController) {
             )
         }
 
-        Spacer(modifier = Modifier.height(55.dp))
-
-        Button(
-            onClick = { showDeleteDialog = true },
-            colors = ButtonDefaults.buttonColors(containerColor = Color.Red),
-            modifier = Modifier
-                .fillMaxWidth(0.65f)
-                .height(50.dp),
-            shape = RoundedCornerShape(50)
-        ) {
-            Text("Delete Account", color = Color.White, fontSize = 18.sp)
-        }
-    }
-
-    if (showDeleteDialog) {
-        AlertDialog(
-            onDismissRequest = { showDeleteDialog = false },
-            title = { Text("Confirm Delete") },
-            text = { Text("Are you sure you want to delete your account? This action cannot be undone.") },
-            confirmButton = {
-                TextButton(
-                    onClick = {
-                        showDeleteDialog = false
-                        coroutineScope.launch { deleteAccount() }
-                    }
-                ) {
-                    Text("Yes")
-                }
-            },
-            dismissButton = {
-                TextButton(onClick = { showDeleteDialog = false }) {
-                    Text("Cancel")
-                }
-            }
+        Spacer(modifier = Modifier.height(55.dp)
+        )
+        Text(
+            text = "If you want to delete your account just send email to: " +
+                    "khadrowo@gmail.com",
+            fontSize = 15.sp,
+            color = Color.Red
         )
     }
 }
+
 
 
